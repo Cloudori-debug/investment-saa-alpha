@@ -1,0 +1,16 @@
+﻿ticker,name,asset_group,sector,style,quantity,current_value,avg_price,current_price
+157450,TIGER 단기통안채,cash_short_bond,bond,short_duration,456,51108480,,112080.0
+459580,KODEX CD금리액티브,cash_short_bond,bond,cash_like,9,9664695,,1073855.0
+005830,DB손해보험,kr_alpha,insurance,shareholder_return,47,6899600,,146800.0
+021240,코웨이,kr_alpha,consumer,quality_defensive,57,5437800,,95400.0
+005440,현대지에프홀딩스,kr_alpha,holding,value_rerating,336,4999680,,14880.0
+192400,쿠쿠홀딩스,kr_alpha,holding,value_quality,200,5140000,,25700.0
+006040,동원산업,kr_alpha,consumer,value_defensive,150,5047500,,33650.0
+036530,SNT홀딩스,kr_alpha,holding,dividend_value,90,4563000,,50700.0
+271560,오리온,kr_alpha,consumer,defensive_consumer,26,3543800,,136300.0
+453340,현대그린푸드,kr_alpha,consumer,defensive_value,100,1758000,,17580.0
+261240,KODEX 미국달러선물,fx_dollar,fx,dollar,50,785250,,15705.0
+CASH,예수금,cash_short_bond,cash,cash,1,18000000,,
+030200,KT,kr_alpha,telecom,,10,537000,,53700.0
+411060,ACE KRX금현물,hedge_alt,hedge_alt,,38,1080530,,28435.0
+360750,TIGER 미국S&P500,global_beta,core_equity,,10,286050,,28605.0

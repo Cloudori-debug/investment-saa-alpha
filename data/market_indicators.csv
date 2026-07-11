@@ -1,0 +1,2 @@
+date,kospi,kospi_recent_high,kospi_200ma,sp500,sp500_recent_high,vix,usdkrw,korea_10y,oil_brent,gold,foreign_flow_3d,regime,regime_override_reason,regime_set_date,regime_expires_date
+2026-07-10,7475.94,9114.55,7724.72,7543.68,7609.7798,15.71,1501.67,2.2,76.34,4105.8,neutral,YELLOW_STABLE,"BOK FSR Jun-2026: FSI 17.2 warning stage, FVI 46.0 above long-term average 45.7; price momentum risk-on but financial stability stress remains.",2026-06-24,2026-09-24
