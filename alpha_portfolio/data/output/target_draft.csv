@@ -1,0 +1,9 @@
+﻿ticker,name,asset_group,sector,role,tier,target_weight,min_weight,max_weight,sleeve_weight,matrix_action,change_reason
+030200,KT,kr_alpha,telecom,quality_dividend,Core,7.0,5.36,16.05,22.58,keep,
+021240,코웨이,kr_alpha,consumer,quality_defensive,Core,7.0,5.36,16.05,22.58,keep,
+005830,DB손해보험,kr_alpha,insurance,shareholder_return,Core,5.36,5.36,16.05,17.29,trim,overweight
+000660,SK하이닉스,kr_alpha,semiconductor,defensive_consumer,Satellite,3.51,0.0,10.71,11.32,add,replace_in for 192400
+006040,동원산업,kr_alpha,consumer,dividend_value,Core,1.8,1.38,4.13,5.81,add,replace_in for 002380
+271560,오리온,kr_alpha,consumer,quality_defensive,Core,1.8,1.38,4.13,5.81,keep,
+036530,SNT홀딩스,kr_alpha,holding,shareholder_return,Core,1.8,1.38,4.13,5.81,add,replace_in for 453340
+005440,현대지에프홀딩스,kr_alpha,holding,value_rerating,Core,1.62,0.81,2.42,5.23,keep,

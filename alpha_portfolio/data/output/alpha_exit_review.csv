@@ -1,0 +1,11 @@
+﻿ticker,name,role,tier,composite_score,composite_raw,grade,exit_type,exit_rule_id,exit_reason,incumbent_bonus_applied,park_start_date,park_days,park_review_due,action_suggested,action_priority,as_of
+005830,DB손해보험,dividend_value,Core,59.52,59.52,B,Soft,S05,overweight,False,,,,Trim,Medium,2026-07-09
+021240,코웨이,quality_defensive,Core,61.46,58.46,B,None,T10,core_watch,True,,,,Hold,Low,2026-07-09
+005440,현대지에프홀딩스,value_rerating,Core,61.68,58.68,B,None,T10,core_watch,True,,,,Hold,Low,2026-07-09
+192400,쿠쿠홀딩스,defensive_consumer,—,54.03,54.03,Reject,Hard,H05,reject_2w,False,,,,Replace,High,2026-07-09
+006040,동원산업,dividend_value,Core,67.14,64.14,B,None,T12,core_quality_hold,True,,,,Hold,Low,2026-07-09
+036530,SNT홀딩스,shareholder_return,Core,66.41,63.41,B,None,T12,core_quality_hold,True,,,,Hold,Low,2026-07-09
+002380,KCC,value_quality,—,37.98,37.98,Reject,Hard,H05,reject_2w,False,,,,Replace,High,2026-07-09
+271560,오리온,quality_defensive,Core,64.12,61.12,B,None,T12,core_quality_hold,True,,,,Hold,Low,2026-07-09
+030190,NICE평가정보,defensive_consumer,—,51.65,51.65,C,Soft,S02,grade_c_2w,False,,,,Trim,Medium,2026-07-09
+453340,현대그린푸드,value_quality,—,49.84,49.84,Reject,Hard,H05,reject_2w,False,,,,Replace,High,2026-07-09

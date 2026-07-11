@@ -1,20 +1,16 @@
 # Private remote push (동준님용)
 #
-# 1) GitHub 또는 GitLab에서 **private** 저장소를 직접 생성하세요.
-#    예: https://github.com/<username>/multi_asset_trigger_portfolio
+# 1) GitHub에서 **private** 저장소 `investment-saa-alpha` 를 직접 생성하세요.
+#    예: https://github.com/<username>/investment-saa-alpha
 #
-# 2) 아래 URL을 실제 저장소로 바꾼 뒤 PowerShell에서 실행:
+# 2) PowerShell에서 실행:
 #
-#    cd C:\Cursor\multi_asset_trigger_portfolio
-#    git remote add origin https://github.com/<username>/multi_asset_trigger_portfolio.git
+#    cd C:\Cursor\investment-saa-alpha
+#    git remote add origin https://github.com/<username>/investment-saa-alpha.git
 #    git push -u origin main
 #
-# GitLab 예:
-#    git remote add origin https://gitlab.com/<username>/multi_asset_trigger_portfolio.git
-#    git push -u origin main
-#
-# SSH를 쓰는 경우:
-#    git remote add origin git@github.com:<username>/multi_asset_trigger_portfolio.git
+# SSH:
+#    git remote add origin git@github.com:<username>/investment-saa-alpha.git
 #    git push -u origin main
 #
 # 참고: 이 PC의 전역 gitconfig 읽기 권한이 제한될 수 있습니다.

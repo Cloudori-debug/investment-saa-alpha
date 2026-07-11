@@ -227,7 +227,7 @@ def ai_export_prereq_shortcuts(*, include_alpha_target: bool = False) -> list[Na
 
 
 def draft_path_exists() -> bool:
-    p = Path(__file__).resolve().parents[2].parent / "alpha_portfolio" / "data" / "output" / "target_draft.csv"
+    p = Path(__file__).resolve().parents[2] / "alpha_portfolio" / "data" / "output" / "target_draft.csv"
     return p.exists()
 
 

@@ -1,0 +1,58 @@
+{
+  "000660": {
+    "name": "SK하이닉스",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 67.27,
+    "composite_score": 67.27,
+    "weight": 0.1491
+  },
+  "006040": {
+    "name": "동원산업",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 67.14,
+    "composite_score": 67.14,
+    "weight": 0.1488
+  },
+  "036530": {
+    "name": "SNT홀딩스",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 66.41,
+    "composite_score": 66.41,
+    "weight": 0.1471
+  },
+  "271560": {
+    "name": "오리온",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 64.12,
+    "composite_score": 64.12,
+    "weight": 0.1421
+  },
+  "005830": {
+    "name": "DB손해보험",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 62.52,
+    "composite_score": 62.52,
+    "weight": 0.1385
+  },
+  "069960": {
+    "name": "현대백화점",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 62.18,
+    "composite_score": 62.18,
+    "weight": 0.1378
+  },
+  "005440": {
+    "name": "현대지에프홀딩스",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 61.68,
+    "composite_score": 61.68,
+    "weight": 0.1367
+  }
+}

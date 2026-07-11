@@ -34,9 +34,17 @@
 ### (선택) 터미널
 
 ```powershell
-cd multi_asset_trigger_portfolio
+cd investment-saa-alpha
 pip install -e ".[dev,ui,data]"
 streamlit run app.py
+```
+
+CECS 알파 스크리너(하위 패키지):
+
+```powershell
+cd alpha_portfolio
+pip install -e ".[data,dev]"
+python -m src.main --kr-alpha-weight 31 --collect
 ```
 
 ## 입력 (`data/`)

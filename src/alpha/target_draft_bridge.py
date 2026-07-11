@@ -17,7 +17,8 @@ from src.models import TargetRow
 
 
 def default_target_draft_path() -> Path:
-    return Path(__file__).resolve().parents[3] / "alpha_portfolio" / "data" / "output" / "target_draft.csv"
+    # Monorepo: investment-saa-alpha/alpha_portfolio/...
+    return Path(__file__).resolve().parents[2] / "alpha_portfolio" / "data" / "output" / "target_draft.csv"
 
 
 def load_target_draft(path: Path) -> pd.DataFrame:
