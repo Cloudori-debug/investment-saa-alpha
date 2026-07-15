@@ -162,7 +162,7 @@ def test_run_configured_alpha_shadows_skips_v02(tmp_path: Path) -> None:
     _write_policy(data, v0_2_enabled=False)
     out.mkdir(parents=True, exist_ok=True)
 
-    with patch("src.alpha_v0_2.pipeline.run_alpha_v0_2_shadow") as mock_v02:
+    with patch("src.alpha_shadow_policy._run_alpha_v0_2_shadow") as mock_v02:
         run_configured_alpha_shadows(
             data, out, run_id="rid", as_of="2026-07-03",
             positions=[], targets=[], append_log=append_decision_log,
@@ -179,14 +179,13 @@ def test_run_configured_alpha_shadows_runs_v02(tmp_path: Path) -> None:
     _write_policy(data, v0_2_enabled=True)
     out.mkdir(parents=True, exist_ok=True)
 
-    with patch("src.alpha_v0_2.pipeline.run_alpha_v0_2_shadow") as mock_v02:
+    with patch("src.alpha_shadow_policy._run_alpha_v0_2_shadow") as mock_v02:
         run_configured_alpha_shadows(
             data, out, run_id="rid", as_of="2026-07-03",
             positions=[], targets=[], append_log=append_decision_log,
         )
         mock_v02.assert_called_once()
         assert mock_v02.call_args.kwargs.get("run_id") == "rid"
-
 
 def test_load_alpha_shadow_flags_from_repo_policy() -> None:
     root = Path(__file__).resolve().parents[1]

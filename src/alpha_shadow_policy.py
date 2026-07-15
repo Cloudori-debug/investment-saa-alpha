@@ -3,12 +3,19 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from src.config import load_portfolio_policy
 from src.report.io_utils import read_output_json
 
 V02_DISABLED_NOTE = "Alpha v0.2 shadow disabled by config."
+V02_UNAVAILABLE_NOTE = "Alpha v0.2 shadow module unavailable (archived)."
+
+# Optional: package may live under archive/ after cleanup phase 0.
+try:
+    from src.alpha_v0_2.pipeline import run_alpha_v0_2_shadow as _run_alpha_v0_2_shadow
+except ImportError:  # pragma: no cover - expected after archive
+    _run_alpha_v0_2_shadow: Callable[..., Any] | None = None
 
 
 def alpha_shadow_flags(policy: dict[str, Any]) -> dict[str, bool]:
@@ -165,21 +172,30 @@ def run_configured_alpha_shadows(
     flow_mode = str(getattr(cfg, "flow_refresh_mode", "cache_first")) if cfg else "cache_first"
 
     if flags.get("v0_2_enabled"):
-        try:
-            from src.alpha_v0_2.pipeline import run_alpha_v0_2_shadow
-
-            run_alpha_v0_2_shadow(
-                data_dir,
-                output_dir,
-                as_of=as_of,
-                positions=positions,
-                targets=targets,
-                legacy_output_dir=output_dir,
-                run_id=run_id,
+        if _run_alpha_v0_2_shadow is None:
+            append_log(
+                output_dir / "decision_log.jsonl",
+                {
+                    "event": "alpha_v0_2_shadow_skipped",
+                    "run_id": run_id,
+                    "reason": "module_unavailable",
+                    "note": V02_UNAVAILABLE_NOTE,
+                },
             )
-            ran["v0_2"] = True
-        except Exception:
-            pass
+        else:
+            try:
+                _run_alpha_v0_2_shadow(
+                    data_dir,
+                    output_dir,
+                    as_of=as_of,
+                    positions=positions,
+                    targets=targets,
+                    legacy_output_dir=output_dir,
+                    run_id=run_id,
+                )
+                ran["v0_2"] = True
+            except Exception:
+                pass
     else:
         append_log(
             output_dir / "decision_log.jsonl",
