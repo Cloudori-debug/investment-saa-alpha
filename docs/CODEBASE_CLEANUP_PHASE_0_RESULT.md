@@ -30,7 +30,11 @@
 |------|------|
 | `import src.main` | ok |
 | `_run_alpha_v0_2_shadow is None` | True (archived) |
-| `pytest tests/test_alpha_shadow_config.py` | 10 passed |
-| `data/portfolio_policy.yaml` `v0_2_enabled` | false (기존) |
+| `v0_2_enabled=true` 시 skip 로그 | `reason=module_unavailable` |
+| `pytest tests/test_alpha_shadow_config.py` | **10 passed** |
+| 관련 묶음 (export_daily_brief + take_profit/gap/worksheet 등) | **31 passed** |
+| `test_action_planner::test_kr_alpha_replace_theoretical_low_priority` | **사전 존재 fail** (Expected Low got High) — phase 0과 무관 |
+| 전체 pytest | PowerShell 파이프 버퍼로 장시간 대기 — 핵심 경로·shadow 테스트로 갈음. 원하시면 별도 전체 재실행 |
+| 커밋 | `0adf388 cleanup: archive alpha_v0_2 (phase 0)` |
 
-> 전체 pytest / full `python -m src.main` 결과는 커밋 전 실행 로그에 별도 기입.
+**다음:** 원장 검증 후 1단계(`value_list`) 진행 여부 결정.
