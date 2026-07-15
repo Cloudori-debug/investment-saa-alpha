@@ -890,8 +890,7 @@ def write_daily_report(
         lines.extend(checklist_markdown_section(data_dir, output_dir, as_of=market.date, section_no=next_section))
         next_section += 1
 
-        from src.value_list.macro_scenarios import write_macro_scenario
-        from src.value_list.research_checklist import write_research_checklist
+        from src.hakedaka_gate import write_macro_scenario, write_research_checklist
 
         write_macro_scenario(data_dir, output_dir)
         macro_path = output_dir / "macro_scenario.json"

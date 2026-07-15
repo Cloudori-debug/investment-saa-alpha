@@ -137,7 +137,10 @@ def main() -> int:
 
     from src.validation.alpha_gate_diagnostics import write_alpha_gate_diagnostics
     from src.data_refresh.tier_h import ensure_tier_h_prices
-    from src.value_list.hakedaka_data_quality import write_hakedaka_data_quality_report
+    try:
+        from src.value_list.hakedaka_data_quality import write_hakedaka_data_quality_report
+    except ImportError:
+        write_hakedaka_data_quality_report = None  # value_list archived
 
     as_of = "2026-07-08"
     bundle = json.loads((output_dir / "ai_export_bundle.json").read_text(encoding="utf-8"))
@@ -147,6 +150,9 @@ def main() -> int:
 
     post_alpha = write_alpha_gate_diagnostics(data_dir, output_dir)
     tier_h = ensure_tier_h_prices(data_dir, as_of, fetch_missing=False)
+    if write_hakedaka_data_quality_report is None:
+        print("skip hakedaka_data_quality (value_list archived)")
+        return
     post_hakedaka = write_hakedaka_data_quality_report(
         data_dir,
         output_dir,

@@ -57,7 +57,7 @@ def _tie_break_boost(
 ) -> float:
     if not integration_cfg or not pool:
         return 0.0
-    from src.value_list.alpha_bridge import proposal_sort_score, tie_breaker_sort_boost
+    from src.hakedaka_gate import proposal_sort_score, tie_breaker_sort_boost
 
     leader = max(
         proposal_sort_score(
@@ -176,7 +176,7 @@ def build_shortlist_and_proposal(
     if not scored:
         return SelectionResult(warnings=["스코어 가능 종목 없음"])
 
-    from src.value_list.alpha_bridge import eligible_for_proposal_row, proposal_sort_score
+    from src.hakedaka_gate import eligible_for_proposal_row, proposal_sort_score
 
     ranks = _pillar_ranks(scored)
     pool: list[dict[str, Any]] = []

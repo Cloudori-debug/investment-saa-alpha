@@ -6,7 +6,7 @@ from src.alpha.price_coverage import (
     tickers_missing_prices,
 )
 from src.alpha.schemas import PriceRecord
-from src.value_list.alpha_bridge import eligible_for_proposal_row
+from src.hakedaka_gate import eligible_for_proposal_row
 
 
 def _px(ticker: str) -> PriceRecord:

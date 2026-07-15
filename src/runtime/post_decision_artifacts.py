@@ -381,7 +381,7 @@ def run_post_decision_artifacts(
         alpha_bt_ran = True
 
     try:
-        from src.value_list.research_pipeline import run_research_automation
+        from src.hakedaka_gate import run_research_automation
 
         run_research_automation(data_dir, output_dir)
     except Exception:

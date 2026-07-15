@@ -9,7 +9,7 @@ from src.data_refresh.prices_refresh import TierAPricesResult, _normalize_ticker
 
 def collect_tier_h_tickers(data_dir: Path) -> set[str]:
     """Tier H — 하케다카 50종 필수 갱신 대상 (Tier A와 별도)."""
-    from src.value_list.ticker_registry import resolve_hakedaka_registry
+    from src.hakedaka_gate import resolve_hakedaka_registry
 
     tickers: set[str] = set()
     for row in resolve_hakedaka_registry(data_dir):

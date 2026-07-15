@@ -167,7 +167,7 @@ def run_full_pipeline(
     alpha_out = None
     if run_alpha and (data_dir / "universe.csv").exists():
         try:
-            from src.value_list.dart_prep import prepare_hakedaka_dart_pipeline
+            from src.hakedaka_gate import prepare_hakedaka_dart_pipeline
 
             prepare_hakedaka_dart_pipeline(data_dir, output_dir)
         except Exception:

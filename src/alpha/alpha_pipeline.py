@@ -128,7 +128,7 @@ def run_alpha_pipeline(
     write_outputs: bool = True,
     run_mode_config: object | None = None,
 ) -> AlphaPipelineOutput:
-    from src.value_list.alpha_bridge import (
+    from src.hakedaka_gate import (
         apply_hakedaka_alpha_bonus,
         build_liquidity_pass_map,
         hakedaka_alpha_limitations,
@@ -266,7 +266,7 @@ def run_alpha_pipeline(
     from src.alpha.target_bridge import load_kr_alpha_budget
 
     kr_budget = load_kr_alpha_budget(output_dir) if output_dir.exists() else None
-    from src.value_list.ticker_registry import load_integration_config
+    from src.hakedaka_gate import load_integration_config
 
     integration_cfg = load_integration_config(data_dir)
     selection = build_shortlist_and_proposal(
@@ -361,7 +361,7 @@ def run_alpha_pipeline(
         limitations = list(limitations) + hk_notes
 
     if write_outputs:
-        from src.value_list.overlap_diagnostics import write_hakedaka_overlap_diagnostics
+        from src.hakedaka_gate import write_hakedaka_overlap_diagnostics
 
         write_hakedaka_overlap_diagnostics(
             data_dir,
