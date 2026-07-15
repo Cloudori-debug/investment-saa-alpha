@@ -17,7 +17,7 @@ import pandas as pd
 
 
 from src.alpha.investor_flows import get_flow_for_ticker as _legacy_get_flow_for_ticker
-from src.alpha_flow.flow_service import get_flow_for_ticker_unified
+from src.alpha_v2_gate import get_flow_for_ticker_unified
 
 
 def get_flow_for_ticker(data_dir: Path, ticker: str) -> dict[str, Any]:
@@ -30,6 +30,14 @@ def get_flow_for_ticker(data_dir: Path, ticker: str) -> dict[str, Any]:
 from src.alpha.schemas import AlphaCandidate, HoldingReview
 
 from src.alpha.sector_mapping import load_krx_sector_mapping, resolve_sector
+
+from src.alpha.take_profit_thesis import (
+    assess_take_profit,
+    assess_thesis_break,
+    exit_source_tag_tb,
+    load_exit_targets,
+    trim_source_tag_tp,
+)
 
 from src.csv_utils import write_dataframe_csv
 
@@ -92,6 +100,24 @@ SIGNAL_BOARD_COLUMNS = [
     "eligible_action",
 
     "review_action",
+
+    "exit_leg",
+
+    "targets_missing",
+
+    "trim_source_tag",
+
+    "tp_partial_frac",
+
+    "tp_signal_strength",
+
+    "tp_rationale",
+
+    "momentum_override_applied",
+
+    "fund_proximity_pct",
+
+    "val_proximity_pct",
 
 ]
 
@@ -194,6 +220,24 @@ class SignalBoardRow:
     eligible_action: str = ""
 
     review_action: str = ""
+
+    exit_leg: str = "NONE"
+
+    targets_missing: bool = True
+
+    trim_source_tag: str = "—"
+
+    tp_partial_frac: float = 0.0
+
+    tp_signal_strength: float = 0.0
+
+    tp_rationale: str = ""
+
+    momentum_override_applied: bool = False
+
+    fund_proximity_pct: float | None = None
+
+    val_proximity_pct: float | None = None
 
 
 
@@ -778,7 +822,11 @@ def build_alpha_signal_board(
 
     alpha_auto_buy_ok = alpha_auto_buy_permission == "ALLOWED"
 
-
+    exit_cfg = load_exit_targets(data_dir / "kr_alpha_exit_targets.yaml")
+    exit_defaults = exit_cfg.get("defaults") or {}
+    exit_bands = exit_defaults.get("exit_partial_frac_bands")
+    mom_thr = float(exit_defaults.get("momentum_override_threshold") or 70.0)
+    exit_tickers = exit_cfg.get("tickers") or {}
 
     holdings_by_ticker = {h.ticker: h for h in holdings_review}
 
@@ -919,7 +967,53 @@ def build_alpha_signal_board(
 
         blocker_text = "; ".join(blockers) if blockers else "—"
 
+        tkey = str(ticker).zfill(6) if str(ticker).isdigit() else str(ticker)
+        tp_targets = exit_tickers.get(tkey) or exit_tickers.get(ticker) or {}
+        if not isinstance(tp_targets, dict):
+            tp_targets = {}
+        mom_score = cand_dict.get("momentum_score")
+        try:
+            mom_f = float(mom_score) if mom_score is not None else None
+        except (TypeError, ValueError):
+            mom_f = None
+        price_ctx = dict(px_d) if isinstance(px_d, dict) else {}
+        if "valuation_score" not in price_ctx and cand_dict.get("valuation_score") is not None:
+            price_ctx["valuation_score"] = cand_dict.get("valuation_score")
+        fund_ctx = dict(fund_d) if isinstance(fund_d, dict) else {}
+        tp = assess_take_profit(
+            ticker,
+            fundamentals=fund_ctx,
+            prices=price_ctx,
+            targets=tp_targets,
+            momentum_score=mom_f,
+            bands=exit_bands,
+            momentum_override_threshold=mom_thr,
+        )
+        tb = assess_thesis_break(ticker, flags=cand_dict)
+        tp_tag = trim_source_tag_tp(tp)
+        tb_tag = exit_source_tag_tb(tb)
 
+        trim_bits: list[str] = []
+        if cw > 0:
+            trim_bits.append(f"trim:score weight>{tw:.1f}%+2%p or review TRIM")
+        if tp.suggested_action == "Trim" and not tp.targets_missing:
+            trim_bits.append(
+                f"{tp_tag} partial={tp.partial_frac:.0%} strength={tp.signal_strength:.0f}"
+            )
+        elif tp.targets_missing and cw > 0:
+            trim_bits.append("targets_missing")
+        trim_text = "; ".join(trim_bits) if trim_bits else "—"
+
+        exit_base = _exit_trigger_text(
+            action,
+            executable_replace=missing.get("executable_replace") == "true",
+        )
+        exit_bits = [exit_base] if exit_base and exit_base != "—" else []
+        if tb.active:
+            exit_bits.insert(0, f"{tb_tag} {tb.rationale}")
+        if tp.suggested_action == "Exit-review":
+            exit_bits.append(f"{tp_tag} {tp.rationale}")
+        exit_text = "; ".join(exit_bits) if exit_bits else "—"
 
         rows.append(
 
@@ -959,20 +1053,9 @@ def build_alpha_signal_board(
 
                 add_trigger="target band room + Buy-allowed + alpha gate" if action == "Hold" else "—",
 
-                trim_trigger=(
+                trim_trigger=trim_text,
 
-                    f"weight > {tw:.1f}%+2%p or review TRIM"
-
-                    if cw > 0
-
-                    else "—"
-
-                ),
-
-                exit_trigger=_exit_trigger_text(
-                    action,
-                    executable_replace=missing.get("executable_replace") == "true",
-                ),
+                exit_trigger=exit_text,
 
                 confidence=conf,
 
@@ -989,6 +1072,24 @@ def build_alpha_signal_board(
                 eligible_action=str(cand_dict.get("eligible_action") or ""),
 
                 review_action=str(review_action or ""),
+
+                exit_leg=tp.exit_leg,
+
+                targets_missing=tp.targets_missing,
+
+                trim_source_tag=tp_tag if tp_tag != "—" else ("trim:score" if cw > 0 else "—"),
+
+                tp_partial_frac=tp.partial_frac,
+
+                tp_signal_strength=tp.signal_strength,
+
+                tp_rationale=tp.rationale,
+
+                momentum_override_applied=tp.momentum_override_applied,
+
+                fund_proximity_pct=tp.fund_proximity_pct,
+
+                val_proximity_pct=tp.val_proximity_pct,
 
             )
 
@@ -1055,14 +1156,21 @@ def load_signal_board_from_csv(path: Path) -> list[SignalBoardRow]:
     df = pd.read_csv(path, dtype=str)
     float_fields = {
         "flow_score", "current_weight_pct", "target_weight_pct", "total_score",
+        "tp_partial_frac", "tp_signal_strength", "fund_proximity_pct", "val_proximity_pct",
     }
+    bool_fields = {"targets_missing", "momentum_override_applied"}
     rows: list[SignalBoardRow] = []
     for raw in df.to_dict(orient="records"):
         item: dict[str, Any] = {}
         for field in SignalBoardRow.__dataclass_fields__:
             val = raw.get(field, "")
-            if field in float_fields and val not in (None, "", "nan"):
-                item[field] = float(val)
+            if field in float_fields:
+                if val in (None, "", "nan", "None"):
+                    item[field] = None if field.endswith("proximity_pct") else 0.0
+                else:
+                    item[field] = float(val)
+            elif field in bool_fields:
+                item[field] = str(val).strip().lower() in {"true", "1", "yes"}
             else:
                 item[field] = "" if val in (None, "nan") else val
         rows.append(SignalBoardRow(**item))

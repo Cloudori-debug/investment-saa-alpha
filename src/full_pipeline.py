@@ -176,7 +176,7 @@ def run_full_pipeline(
 
         as_of_for_prices = market.date if market.date else None
         if as_of_for_prices:
-            from src.alpha_v2.price_fetch_policy import maybe_refresh_tier_prices_before_alpha
+            from src.alpha_v2_gate import maybe_refresh_tier_prices_before_alpha
 
             maybe_refresh_tier_prices_before_alpha(
                 data_dir,
@@ -211,7 +211,7 @@ def run_full_pipeline(
                 or bool(getattr(cfg, "run_flow_dashboard", True))
             )
             if run_shadows:
-                from src.alpha_v2.cache_decision import write_pipeline_input_snapshot
+                from src.alpha_v2_gate import write_pipeline_input_snapshot
 
                 write_pipeline_input_snapshot(
                     output_dir, data_dir, as_of=market.date, run_id=run_id,
@@ -477,7 +477,7 @@ def run_full_pipeline(
     sync_export_clarity_artifacts(output_dir)
 
     if market.date:
-        from src.alpha_v2.cache_decision import commit_pipeline_input_snapshot
+        from src.alpha_v2_gate import commit_pipeline_input_snapshot
 
         with _core_step("post_run_commit_snapshot"):
             commit_pipeline_input_snapshot(

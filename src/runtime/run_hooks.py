@@ -74,7 +74,7 @@ def _run_flow_refresh_policy(
         return {"skipped": True, "reason": "investor_flows_unchanged", "mode": mode}
     try:
         from src.alpha.flow_refresh import run_flow_refresh
-        from src.alpha_flow.watched_universe import resolve_watched_universe_tickers
+        from src.alpha_v2_gate import resolve_watched_universe_tickers
 
         tickers = resolve_watched_universe_tickers(data_dir, output_dir, max_tickers=80)
         if not tickers:

@@ -8,19 +8,17 @@ import pytest
 SMOKE_MODULES: frozenset[str] = frozenset({
     "test_smoke_acceptance",
     "test_run_mode_cli",
-    "test_run_mode_contract",
+    "test_alpha_v2_gate",
     "test_diagnostics_cache",
     "test_diagnostics_deduplication",
     "test_kosis_refresh_cache",
     "test_bundle_reconcile_cache",
-    "test_alpha_v2_cache_decision",
-    "test_shadow_flow_cache",
+    "test_hakedaka_gate",
     "test_research_outputs_cache",
     "test_shadow_history_cache",
     "test_report_export_cache",
     "test_post_decision_artifacts",
     "test_pipeline_step_runner",
-    "test_price_fetch_policy",
 })
 
 INTEGRATION_MODULES: frozenset[str] = frozenset({

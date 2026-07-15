@@ -527,11 +527,12 @@ def write_daily_report(
 
         lines.extend(build_daily_report_v2_sections(daily_brief))
         if output_dir is not None:
-            from src.alpha_v2.export_alpha_v2 import build_daily_report_alpha_v2_section
+            from src.alpha_v2_gate import (
+                build_daily_report_alpha_v2_section,
+                build_daily_report_flow_section,
+            )
 
             lines.extend(build_daily_report_alpha_v2_section(output_dir))
-            from src.alpha_flow.dashboard_data import build_daily_report_flow_section
-
             lines.extend(build_daily_report_flow_section(output_dir))
         from src.shadow.history_ledger import build_daily_report_shadow_history_lines
 

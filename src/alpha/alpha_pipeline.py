@@ -143,7 +143,7 @@ def run_alpha_pipeline(
 
     import os
 
-    from src.alpha_v2.price_fetch_policy import evaluate_standard_price_fetch
+    from src.alpha_v2_gate import evaluate_standard_price_fetch
 
     skip_tier_prices = False
     if run_mode_config is not None:

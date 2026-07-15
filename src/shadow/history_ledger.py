@@ -10,7 +10,7 @@ from typing import Any
 import pandas as pd
 
 from src.alpha.benchmark_data import load_combined_prices
-from src.alpha_flow.flow_classifier import classify_stale_reason, is_flow_record_stale
+from src.alpha_v2_gate import classify_stale_reason, is_flow_record_stale
 from src.decision.shadow_performance import _pct_change, _row_on_or_before, add_business_days
 
 HISTORY_SUBDIR = "history"

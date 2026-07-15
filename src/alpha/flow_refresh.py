@@ -27,7 +27,7 @@ from src.alpha.investor_flows import (
     flow_score_from_signal,
     load_investor_flows,
 )
-from src.alpha_flow.flow_classifier import is_flow_record_stale
+from src.alpha_v2_gate import is_flow_record_stale
 
 MANUAL_VERIFIED_SOURCES = frozenset({"manual_verified"})
 AUTO_SOURCES = frozenset({"auto_pykrx", "auto_krx", "pykrx"})
@@ -107,7 +107,7 @@ def resolve_flow_target_tickers(
 ) -> list[dict[str, str]]:
     """Watched universe when output_dir given; else legacy holdings+candidates+board."""
     if data_dir is not None and output_dir is not None:
-        from src.alpha_flow.watched_universe import resolve_watched_universe_tickers
+        from src.alpha_v2_gate import resolve_watched_universe_tickers
 
         watched = resolve_watched_universe_tickers(data_dir, output_dir, max_tickers=max_tickers)
         if watched:
@@ -600,7 +600,7 @@ def refresh_investor_flows(
     reason_list: list[str] = []
     last_success_ts = ""
 
-    from src.alpha_flow.flow_classifier import classify_stale_reason, summarize_stale_reasons
+    from src.alpha_v2_gate import classify_stale_reason, summarize_stale_reasons
 
     for item in tickers:
         tk = str(item.get("ticker", "")).zfill(6)

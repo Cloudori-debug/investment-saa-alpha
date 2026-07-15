@@ -24,7 +24,12 @@
 |------|------|
 | `import src.main` | ok |
 | `hakedaka_enabled()` | False · registry=[] |
-| portfolio_selector / price_coverage / export_daily_brief / shadow_config | 핵심 스위트 통과 (1건 `test_saa_taa_ticker_tables` 사전 비중 합 불일치 — 하케다카와 무관) |
-| `tests/test_hakedaka_gate.py` | 추가 |
+| portfolio_selector / price_coverage / export_daily_brief / shadow_config | 핵심 스위트 통과 (1건 `test_saa_taa_ticker_tables` 사전 비중 합 불일치 — 하케다카와 무관, `TEST_BACKLOG`) |
+| `tests/test_hakedaka_gate.py` | 추가 · pass |
+| **전체 파이프라인** (`python -m src.main`, 2026-07-15) | **exit 0** · Data Gate GREEN · Actual Buy Allowed=0 · Health warn(1) |
+| `decision_log.jsonl` | `2026-07-15T11:38:14Z` `bundle_reconciliation` (커밋 이후 완주) |
+| `daily_brief` hakedaka | `latest_hakedaka_status.enabled=false` · note=`value_list archived` |
 
-**다음:** 원장 검증 후 2단계(`alpha_v2` + `alpha_flow`) 진행 여부 결정.
+**종결 (2026-07-15):** 원장 요청 전체 분석 1회 정상 완주 확인. 1단계 종료. 다음=2단계(`alpha_v2`/`alpha_flow`) 승인 시.
+
+**원장 라이브 재확인 (2026-07-15 저녁):** `decision_log` `run_id=2026-07-15T20:34:22+09:00` — `alpha_v0_2_shadow_skipped`→게이트→`bundle_reconciliation`. `daily_report.md` 하케다카 섹션 헤더 유지 + disabled 문구(의도적 비활성 명시). pytest 18실패는 `TEST_BACKLOG`(07-08, 34건) 선재 부채와 정합 — **1단계 종결 확정**.

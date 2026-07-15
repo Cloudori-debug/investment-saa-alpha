@@ -10,6 +10,7 @@ from src.report.io_utils import read_output_json
 
 V02_DISABLED_NOTE = "Alpha v0.2 shadow disabled by config."
 V02_UNAVAILABLE_NOTE = "Alpha v0.2 shadow module unavailable (archived)."
+V2_DISABLED_NOTE = "Alpha v2 / Flow disabled (ENABLE_ALPHA_V2=False / archived)."
 
 # Optional: package may live under archive/ after cleanup phase 0.
 try:
@@ -207,38 +208,49 @@ def run_configured_alpha_shadows(
         )
 
     if flags.get("v2_enabled", True) and run_v2:
-        try:
-            from src.alpha_v2.pipeline import run_alpha_v2_shadow
+        from src.alpha_v2_gate import alpha_v2_enabled, run_alpha_v2_shadow
 
-            def _run_v2() -> None:
-                run_alpha_v2_shadow(
-                    data_dir,
-                    output_dir,
-                    as_of=as_of,
-                    positions=positions,
-                    targets=targets,
-                    cache_reuse=v2_cache_reuse,
-                    force_refresh=v2_force_refresh,
-                    flow_refresh_mode=flow_mode,
-                    run_mode=str(getattr(getattr(cfg, "run_mode", None), "value", "standard")) if cfg else "standard",
-                    run_id=run_id,
-                    profiler=profiler,
-                )
-
-            if step_runner is not None and hasattr(step_runner, "step"):
-                with step_runner.step("alpha_v2_pipeline"):
-                    _run_v2()
-                if profiler is not None and getattr(profiler, "alpha_v2_reused_from_cache", False):
-                    step_runner.annotate_last_step(
-                        "alpha_v2_pipeline",
-                        cache_hit=True,
-                        cache_source=str(getattr(profiler, "alpha_v2_refresh_reason", "") or "cache_reuse"),
+        if not alpha_v2_enabled():
+            append_log(
+                output_dir / "decision_log.jsonl",
+                {
+                    "event": "alpha_v2_shadow_skipped",
+                    "run_id": run_id,
+                    "reason": "module_unavailable",
+                    "note": V2_DISABLED_NOTE,
+                },
+            )
+        else:
+            try:
+                def _run_v2() -> None:
+                    run_alpha_v2_shadow(
+                        data_dir,
+                        output_dir,
+                        as_of=as_of,
+                        positions=positions,
+                        targets=targets,
+                        cache_reuse=v2_cache_reuse,
+                        force_refresh=v2_force_refresh,
+                        flow_refresh_mode=flow_mode,
+                        run_mode=str(getattr(getattr(cfg, "run_mode", None), "value", "standard")) if cfg else "standard",
+                        run_id=run_id,
+                        profiler=profiler,
                     )
-            else:
-                _run_v2()
-            ran["v2"] = True
-        except Exception:
-            pass
+
+                if step_runner is not None and hasattr(step_runner, "step"):
+                    with step_runner.step("alpha_v2_pipeline"):
+                        _run_v2()
+                    if profiler is not None and getattr(profiler, "alpha_v2_reused_from_cache", False):
+                        step_runner.annotate_last_step(
+                            "alpha_v2_pipeline",
+                            cache_hit=True,
+                            cache_source=str(getattr(profiler, "alpha_v2_refresh_reason", "") or "cache_reuse"),
+                        )
+                else:
+                    _run_v2()
+                ran["v2"] = True
+            except Exception:
+                pass
     elif not run_v2:
         append_log(
             output_dir / "decision_log.jsonl",
@@ -248,40 +260,60 @@ def run_configured_alpha_shadows(
                 "reason": "run_mode_disabled",
             },
         )
+    else:
+        append_log(
+            output_dir / "decision_log.jsonl",
+            {
+                "event": "alpha_v2_shadow_skipped",
+                "run_id": run_id,
+                "reason": "config_disabled",
+            },
+        )
 
     if flags.get("flow_dashboard_enabled", True) and run_flow and flow_mode != "skip":
-        try:
-            from src.alpha_flow.shadow_flow_cache import maybe_run_shadow_flow_dashboard
+        from src.alpha_v2_gate import alpha_v2_enabled, maybe_run_shadow_flow_dashboard
 
-            run_mode_str = str(getattr(getattr(cfg, "run_mode", None), "value", "standard")) if cfg else "standard"
+        if not alpha_v2_enabled():
+            append_log(
+                output_dir / "decision_log.jsonl",
+                {
+                    "event": "flow_dashboard_skipped",
+                    "run_id": run_id,
+                    "reason": "module_unavailable",
+                    "note": V2_DISABLED_NOTE,
+                },
+            )
+        else:
+            try:
+                run_mode_str = str(getattr(getattr(cfg, "run_mode", None), "value", "standard")) if cfg else "standard"
 
-            def _run_flow() -> None:
-                maybe_run_shadow_flow_dashboard(
-                    data_dir,
-                    output_dir,
-                    as_of=as_of,
-                    run_mode=run_mode_str,
-                    run_id=run_id,
-                    force_refresh=v2_force_refresh,
-                    refresh_mode=flow_mode,
-                    max_tickers=80,
-                    profiler=profiler,
-                )
-
-            if step_runner is not None and hasattr(step_runner, "step"):
-                with step_runner.step("flow_dashboard"):
-                    _run_flow()
-                if profiler is not None and getattr(profiler, "shadow_flow_reused_from_cache", False):
-                    step_runner.annotate_last_step(
-                        "flow_dashboard",
-                        cache_hit=True,
-                        cache_source=str(getattr(profiler, "shadow_flow_refresh_reason", "") or "cache_reuse"),
+                def _run_flow() -> None:
+                    maybe_run_shadow_flow_dashboard(
+                        data_dir,
+                        output_dir,
+                        as_of=as_of,
+                        run_mode=run_mode_str,
+                        run_id=run_id,
+                        force_refresh=v2_force_refresh,
+                        refresh_mode=flow_mode,
+                        max_tickers=80,
+                        profiler=profiler,
                     )
-            else:
-                _run_flow()
-            ran["flow"] = True
-        except Exception:
-            pass
+
+                if step_runner is not None and hasattr(step_runner, "step"):
+                    with step_runner.step("flow_dashboard"):
+                        _run_flow()
+                    if profiler is not None and getattr(profiler, "shadow_flow_reused_from_cache", False):
+                        step_runner.annotate_last_step(
+                            "flow_dashboard",
+                            cache_hit=True,
+                            cache_source=str(getattr(profiler, "shadow_flow_refresh_reason", "") or "cache_reuse"),
+                        )
+                else:
+                    _run_flow()
+                ran["flow"] = True
+            except Exception:
+                pass
     elif flow_mode == "skip" or not run_flow:
         append_log(
             output_dir / "decision_log.jsonl",
@@ -289,6 +321,15 @@ def run_configured_alpha_shadows(
                 "event": "flow_dashboard_skipped",
                 "run_id": run_id,
                 "reason": "run_mode_skip" if flow_mode == "skip" else "run_mode_disabled",
+            },
+        )
+    else:
+        append_log(
+            output_dir / "decision_log.jsonl",
+            {
+                "event": "flow_dashboard_skipped",
+                "run_id": run_id,
+                "reason": "config_disabled",
             },
         )
 

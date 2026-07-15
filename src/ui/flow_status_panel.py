@@ -5,7 +5,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from src.alpha_flow.dashboard_data import (
+from src.alpha_v2_gate import (
+    FLOW_UI_POLICY_LINES,
     build_holdings_target_flow_table,
     build_v2_candidate_flow_table,
     compute_dashboard_cards,
@@ -14,7 +15,6 @@ from src.alpha_flow.dashboard_data import (
     load_streaks_table,
     load_trim_watch_tables,
 )
-from src.alpha_flow.policy import FLOW_UI_POLICY_LINES
 from src.ui.table_display import alpha_list_table_height, show_dataframe_readable
 
 

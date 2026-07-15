@@ -346,7 +346,7 @@ def run_pipeline_with_mode(
         hooks_meta = {}
 
     if as_of:
-        from src.alpha_v2.cache_decision import write_pipeline_input_snapshot
+        from src.alpha_v2_gate import write_pipeline_input_snapshot
 
         write_pipeline_input_snapshot(output_dir, data_dir, as_of=as_of, run_id=run_id)
 

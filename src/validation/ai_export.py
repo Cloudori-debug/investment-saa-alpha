@@ -209,7 +209,7 @@ def build_ai_export_bundle(
 
     bundle.update(build_alpha_export_sections(data_dir, output_dir))
 
-    from src.alpha_v2.export_alpha_v2 import build_alpha_v2_export_sections
+    from src.alpha_v2_gate import build_alpha_v2_export_sections
 
     bundle.update(build_alpha_v2_export_sections(output_dir))
 
