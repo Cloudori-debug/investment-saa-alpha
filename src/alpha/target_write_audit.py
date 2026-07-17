@@ -19,6 +19,7 @@ from src.alpha.target_portfolio_guard import (
     _save_guard,
     assert_approval_bridge_may_include_tickers,
     clear_blocked_reintroduction,
+    count_material_weight_changes,
     evaluate_target_guard,
     find_blocked_reintroduction_violations,
     operational_target_path,
@@ -236,6 +237,9 @@ def write_operational_target(
     if not typed:
         raise ValueError("write_operational_target: no rows after filter")
 
+    # Material delta vs pre-write operational file (same basis as _content_hash).
+    write_material_change_count = count_material_weight_changes(before_rows, typed)
+
     if source == "approval_bridge":
         try:
             assert_approval_bridge_may_include_tickers(
@@ -323,12 +327,18 @@ def write_operational_target(
 
     guard_after = evaluate_target_guard(data_dir, out_dir)
 
+    # changed_rows_after_write == user↔op guard diff after sync (usually 0).
+    # Prefer write_material_change_count for "how many weights this write changed".
+    user_op_guard_diff_rows = int(guard_after.get("changed_rows", 0) or 0)
+
     execution_scope = "NO_TRADE" if guard_after.get("severity") == "FAIL" else "—"
     audit = {
         **base_audit,
         "target_hash_after": hash_after,
         "user_target_hash": user_hash,
-        "changed_rows_after_write": guard_after.get("changed_rows", 0),
+        "write_material_change_count": write_material_change_count,
+        "changed_rows_after_write": user_op_guard_diff_rows,  # legacy alias: user_op_guard_diff_rows
+        "user_op_guard_diff_rows": user_op_guard_diff_rows,
         "proposal_leak_after_write": guard_after.get("system_proposal_leak_count", 0),
         "material_after_write": guard_after.get("unknown_material_count", 0),
         "guard_result_after_write": guard_after.get("severity", "PASS"),

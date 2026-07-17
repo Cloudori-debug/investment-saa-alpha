@@ -147,6 +147,7 @@ def run_full_pipeline(
             ticker_targets=template_targets,
             template_targets=template_targets,
             auto_decompose=auto_decompose,
+            run_id=run_id,
         )
     _end_step(_saa_cm)
 

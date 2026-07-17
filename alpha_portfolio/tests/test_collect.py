@@ -7,11 +7,27 @@ import pytest
 
 from src.collect.dates import normalize_ticker as nt
 from src.collect.pykrx_collector import (
+    _build_snapshot_row,
     _compute_price_metrics,
     _is_etf_name,
     filter_liquid_by_cap,
     select_tickers,
 )
+
+
+def test_snapshot_market_cap_missing_is_nan_not_zero():
+    """Failed/absent market-cap fetch must stay NaN, never a fabricated 0.0."""
+    ohlcv = pd.DataFrame({"종가": [90000, 95000], "거래량": [10, 20]})
+    row = _build_snapshot_row("021240", "2026-07-17", ohlcv, cap_hist=None, cap_today=None)
+    assert pd.isna(row["market_cap"])  # not 0.0
+
+    cap_today = pd.Series({"시가총액": 0.0})  # zero is treated as missing
+    row_zero = _build_snapshot_row("021240", "2026-07-17", ohlcv, None, cap_today)
+    assert pd.isna(row_zero["market_cap"])
+
+    cap_ok = pd.Series({"시가총액": 5.0e12})
+    row_ok = _build_snapshot_row("021240", "2026-07-17", ohlcv, None, cap_ok)
+    assert row_ok["market_cap"] == 5.0e12
 
 
 def test_normalize_ticker():

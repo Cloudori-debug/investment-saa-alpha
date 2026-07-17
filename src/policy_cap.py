@@ -141,7 +141,14 @@ def resolve_policy_cap(
     technical_scope: str,
     data_gate: str,
     health_gate: str,
+    computed_regime: str | None = None,
 ) -> PolicyCapResult:
+    """수동 레짐 기반 캡.
+
+    만료 시(`is_expired`)에는 regime_engine과 같이 **컴퓨티드 레짐**으로
+    cap_regime / max_execution_scope를 재계산한다. override 자동 해제 아님 —
+    캡 전제만 만료 폴백과 일치시킴.
+    """
     manual, is_expired, expires = _manual_regime_state(market)
     reason = getattr(market, "regime_override_reason", None) or ""
     days_left = _days_to_expiry(market, expires)
@@ -172,14 +179,27 @@ def resolve_policy_cap(
     if not manual:
         return inactive
 
-    regime_key = _normalize_regime_key(manual)
+    # 만료 시: 수동값 대신 컴퓨티드 레짐으로 캡 계산 (regime_engine 폴백과 정합)
+    if is_expired and computed_regime and str(computed_regime).strip():
+        regime_for_cap = str(computed_regime).strip()
+        cap_source = "computed_after_manual_expiry"
+        cap_reason = (
+            f"manual_expired({manual}) → computed({regime_for_cap}); "
+            f"{(reason or 'manual expired').strip()}"
+        )[:240]
+    else:
+        regime_for_cap = manual
+        cap_source = "manual_regime"
+        cap_reason = reason or None
+
+    regime_key = _normalize_regime_key(regime_for_cap)
     max_scope = _POLICY_MAX_SCOPE.get(regime_key)
     if max_scope is None:
         return PolicyCapResult(
             active=False,
-            cap_regime=manual,
-            cap_source="manual_regime",
-            cap_reason=reason or None,
+            cap_regime=regime_for_cap,
+            cap_source=cap_source,
+            cap_reason=cap_reason,
             regime_expires_date=expires,
             fsr_reference=fsr_ref,
             max_execution_scope=None,
@@ -203,9 +223,9 @@ def resolve_policy_cap(
 
     return PolicyCapResult(
         active=True,
-        cap_regime=manual,
-        cap_source="manual_regime",
-        cap_reason=reason or None,
+        cap_regime=regime_for_cap if is_expired and computed_regime else manual,
+        cap_source=cap_source,
+        cap_reason=cap_reason,
         regime_expires_date=expires,
         fsr_reference=fsr_ref,
         max_execution_scope=max_scope,
@@ -261,8 +281,11 @@ def build_technical_status_block(
 
 
 def fsr_policy_permissions(cap_regime: str | None) -> dict[str, str]:
-    """YELLOW_STABLE / FSR cap 시 세분화 권한."""
-    if cap_regime and "YELLOW" in cap_regime.upper():
+    """YELLOW_STABLE / CAUTION 캡 시 세분화 권한 (_POLICY_MAX_SCOPE ETF_ONLY 축과 정합)."""
+    if not cap_regime:
+        return {}
+    key = _normalize_regime_key(str(cap_regime))
+    if key in {"YELLOW_STABLE", "CAUTION"}:
         return {
             "etf_new_buy": "REVIEW_ONLY",
             "etf_chase_buy": "BLOCKED",

@@ -50,6 +50,7 @@ def test_load_cost_assumptions_from_yaml(tmp_path: Path) -> None:
 def test_backtest_report_forces_insufficient_banner(tmp_path: Path) -> None:
     result = AlphaBacktestResult(
         dates=[f"2026-06-{i:02d}" for i in range(1, 17)],
+        scored_dates=[f"2026-06-{i:02d}" for i in range(1, 17)],
         top_n=5,
         top_n_avg_return=0.1594,
         universe_avg_return=0.1394,
@@ -63,7 +64,7 @@ def test_backtest_report_forces_insufficient_banner(tmp_path: Path) -> None:
             "slippage_bps": 20,
             "securities_tx_tax_bps": 18,
         },
-        warnings=["예측력 판단 불가 — 참고용 (표본 < 60일)"],
+        warnings=["예측력 판단 불가 — 참고용 (유효 표본 < 60일)"],
     )
     write_alpha_backtest_outputs(result, tmp_path)
     md = (tmp_path / "alpha_backtest_report.md").read_text(encoding="utf-8")
@@ -72,6 +73,9 @@ def test_backtest_report_forces_insufficient_banner(tmp_path: Path) -> None:
     assert "Gross Top-5 초과수익" in md
     assert "Net Top-5 초과수익" in md
     assert "insufficient" in md
+    assert "scored_days_used" in md
     summary = (tmp_path / "alpha_backtest_summary.csv").read_text(encoding="utf-8")
     assert "top_n_excess_net" in summary
     assert "sample_quality" in summary
+    assert "scored_days_used" in summary
+    assert "price_history_days" in summary

@@ -118,6 +118,9 @@ def run_pipeline(
             target = load_target_portfolio(alt)
 
     merged = build_merged_frame(fundamentals, price_snapshot, shareholder, held_tickers)
+    from src.sector_enrich import enrich_sectors
+
+    merged = enrich_sectors(merged)
     merged = _attach_flags(merged, load_stock_flags(paths["raw"] / "stock_flags.csv"))
     merged = _attach_park(merged, load_park_state(paths["state"] / "park_state.csv"))
 

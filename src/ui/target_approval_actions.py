@@ -109,21 +109,33 @@ def render_target_approval_actions(
                 value=True,
                 key=f"{key_prefix}_auto_reanalyze",
             )
-            approver = st.text_input("승인자", value="", key=f"{key_prefix}_approver")
+            approver = str(
+                st.text_input(
+                    "승인자 (이름 또는 이니셜 · 필수)",
+                    value="",
+                    key=f"{key_prefix}_approver",
+                    help="빈 값·기본 human 자동 대입 없음. 감사 로그에 그대로 기록됩니다.",
+                )
+                or ""
+            ).strip()
+            if not approver:
+                st.warning("승인자 이름 또는 이니셜을 입력해야 승인 반영할 수 있습니다.")
             if st.button(
                 "✅ 승인 반영",
                 key=f"{key_prefix}_apply",
                 type="primary",
                 use_container_width=True,
+                disabled=not bool(approver),
             ):
                 try:
-                    apply_proposed_target(
+                    result = apply_proposed_target(
                         proposal,
                         data_dir / "target_portfolio.csv",
                         backup_dir=data_dir / "backups",
-                        approved_by=approver or "human",
+                        approved_by=approver,
                         data_dir=data_dir,
                         output_dir=output_dir,
+                        writer_module="ui.target_approval_actions",
                     )
                 except TargetPortfolioWriteBlockedError as exc:
                     st.error(str(exc))
@@ -131,7 +143,8 @@ def render_target_approval_actions(
                 except Exception as exc:
                     st.error(f"승인 반영 실패: {exc}")
                 else:
-                    st.success("target_portfolio.csv 반영 완료")
+                    n = int((result.audit or {}).get("write_material_change_count") or 0)
+                    st.success(f"target_portfolio.csv 반영 완료 — {n}종 가중치 변경")
                     if session_proposal_key:
                         st.session_state.pop(session_proposal_key, None)
                     st.session_state.pop("target_proposal", None)

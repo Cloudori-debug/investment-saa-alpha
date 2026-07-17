@@ -45,12 +45,36 @@ unresolved_weight_proxy:
 portfolio_structure:
   core_sleeve_target_pct: 75.0
   kr_alpha_overlay_max_pct: 25.0
+  # Standing overlay floor (unchanged). Hybrid scenario B target ~6% is a TEMP
+  # EXCEPTION — see kr_alpha_overlay_min_temp_exception. Do NOT treat 6% as permanent.
   kr_alpha_overlay_min_pct: 15.0
   cash_buffer_max_pct: 3.0
   unresolved_weight_to_ticker: "157450"
   scaled_deploy_note: >
     Core 75% + Alpha 25% scaled to 97% investable; CASH 3% buffer = 100% total.
     Deployed targets: Core 72.75% + kr_alpha 24.25% + CASH 3%.
+
+# Temporary exception to portfolio_structure.kr_alpha_overlay_min_pct (stays 15.0).
+# Spec: docs/KR_ALPHA_POLICY_FLOOR_TEMP_EXCEPTION_SPEC.md
+# Hybrid: docs/KR_ALPHA_HYBRID_TRANSITION_RESULT.md (scenario B)
+# Note: domestic_beta_note above is unchanged — scenario B does not introduce 069500.
+kr_alpha_overlay_min_temp_exception:
+  active: true
+  approved_target_pct: 6.0
+  reason: "KR_ALPHA_HYBRID_TRANSITION_RESULT scenario B (2026-07-16)"
+  start_date: "2026-07-16"
+  review_trigger: >
+    When alpha_grade_forward_return.csv / hakedaka_forward_return_tracker.csv
+    have forward_return_60d~120d actually populated (not pending/blank).
+  review_window_provisional: "2026-Q4 (Oct–Dec 2026)"
+  review_choices:
+    - keep_6pct_with_renewed_exception
+    - permanently_lower_overlay_min
+    - restore_standing_overlay_min_15
+  lapse_if_unreviewed: >
+    If the review trigger is met and no explicit re-decision is recorded,
+    this exception LAPSES and the standing policy kr_alpha_overlay_min_pct=15.0
+    is again fully operative. The exception must not become the silent default.
 
 deployment_throttle:
   per_trade_max_pct: 3.0

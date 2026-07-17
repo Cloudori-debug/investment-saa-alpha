@@ -1,2 +1,2 @@
 date,kospi,kospi_recent_high,kospi_200ma,sp500,sp500_recent_high,vix,usdkrw,korea_10y,oil_brent,gold,foreign_flow_3d,regime,regime_override_reason,regime_set_date,regime_expires_date
-2026-07-10,7475.94,9114.55,7724.72,7543.68,7609.7798,15.71,1501.67,2.2,76.34,4105.8,neutral,YELLOW_STABLE,"BOK FSR Jun-2026: FSI 17.2 warning stage, FVI 46.0 above long-term average 45.7; price momentum risk-on but financial stability stress remains.",2026-06-24,2026-09-24
+2026-07-16,6820.6,9114.55,5584.33,7572.4,7609.7798,15.84,1479.48,2.2,84.64,4040.2,neutral,CAUTION,"KOSPI만 국지적 급락(-24%+), S&P500/VIX/USDKRW/외국인수급 등 교차자산 지표는 평온 — 전방위 시스템 위기 신호 아님. 컴퓨티드 CRISIS와 기존 YELLOW_STABLE의 절충 레벨로 재분류. AC-05b 에스컬레이션(2026-07-14) 대응.",2026-07-14,2026-08-14

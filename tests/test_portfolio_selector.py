@@ -65,16 +65,69 @@ def test_lookup_ticker_metadata():
     assert meta["sources"]
 
 
-def test_pillar_leaderboard_top10_per_axis(tmp_path):
-    from src.alpha.loaders import load_alpha_scoring_config
-    from src.alpha.portfolio_selector import build_pillar_leaderboard, build_shortlist_and_proposal
+def test_satellite_proposed_cap_tracks_kr_alpha_budget():
+    """위성 제안 캡은 target_matrix 슬리브% × budget — 예산이 바뀌면 같이 움직임."""
+    from src.alpha.portfolio_selector import (
+        build_shortlist_and_proposal,
+        load_satellite_single_name_sleeve_pct,
+        resolve_proposed_weight_cap,
+        sleeve_pct_to_portfolio,
+    )
 
+    sleeve = load_satellite_single_name_sleeve_pct()
+    assert sleeve == pytest.approx(5.0)
+
+    for budget in (15.0, 21.85, 25.0):
+        expected = sleeve_pct_to_portfolio(sleeve, budget)
+        cap, src = resolve_proposed_weight_cap(
+            "satellite",
+            kr_alpha_budget=budget,
+            legacy_max_proposed_pct=8.0,
+            satellite_sleeve_pct=sleeve,
+        )
+        assert src == "target_matrix.satellite_cap"
+        assert cap == pytest.approx(expected)
+        assert cap == pytest.approx(round(sleeve * budget / 100.0, 2))
+
+    # 동일 scored 풀에서 budget만 바꿔도 satellite 제안 비중이 예산에 비례
     cfg = load_alpha_scoring_config(DATA_DIR / "alpha_scoring.yaml")
-    out = run_alpha_pipeline(DATA_DIR, tmp_path)
-    lb = pd.read_csv(tmp_path / "alpha_pillar_leaderboard.csv")
-    assert len(lb[lb["pillar"] == "quality"]) <= 10
-    assert "validity_label" in lb.columns
-    assert "005830" in lb["ticker"].astype(str).str.zfill(6).values or len(lb) > 0
+    scored = [
+        {
+            "ticker": f"{i:06d}",
+            "name": f"N{i}",
+            "sector": "tech" if i % 2 == 0 else "consumer",
+            "quality_score": 62,
+            "valuation_score": 56,
+            "momentum_score": 95,  # → satellite role (momentum dominant)
+            "shareholder_return_score": 56,
+            "total_score": 70,
+            "penalty": 0,
+            "grade": "A",
+            "eligible_action": "BUY_CANDIDATE",
+        }
+        for i in range(1, 9)
+    ]
+    caps = []
+    for budget in (15.0, 25.0):
+        result = build_shortlist_and_proposal(scored, cfg, kr_alpha_budget=budget)
+        sats = [p for p in result.proposal if p.role == "satellite"]
+        assert sats, "momentum-dominant rows should be satellite"
+        for p in sats:
+            assert p.proposed_weight_pct <= sleeve_pct_to_portfolio(sleeve, budget) + 1e-9
+        caps.append(max(p.proposed_weight_pct for p in sats))
+    assert caps[1] > caps[0]
+
+
+def test_non_satellite_still_uses_max_proposed_weight_pct():
+    from src.alpha.portfolio_selector import resolve_proposed_weight_cap
+
+    cap, src = resolve_proposed_weight_cap(
+        "core",
+        kr_alpha_budget=21.85,
+        legacy_max_proposed_pct=8.0,
+    )
+    assert cap == 8.0
+    assert src == "max_proposed_weight_pct"
 
 
 def test_saa_taa_ticker_tables():

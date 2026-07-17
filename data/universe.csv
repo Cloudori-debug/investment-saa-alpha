@@ -316,7 +316,6 @@
 069460,대호에이엘,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 475560,더본코리아,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 192080,더블유게임즈,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-012510,더존비즈온,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 004830,덕성,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 004835,덕성우,KOSPI,preferred_stock,,,2010-01-01,true,false,false,false,false,false,clean,false
 145720,덴티움,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -662,7 +661,6 @@
 000760,이화산업,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 014990,인디에프,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 101140,인바이오젠,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-006490,프리티,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 023800,인지컨트롤스,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 034590,인천도시가스,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 129260,인터지스,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -675,7 +673,6 @@
 007110,일신석재,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 007570,일양약품,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 007575,일양약품우,KOSPI,preferred_stock,,,2010-01-01,true,false,false,false,false,false,clean,false
-008500,일정실업,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 081000,일진다이아,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 020760,일진디스플,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 103590,일진전기,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -799,6 +796,7 @@
 103140,풍산,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 005810,풍산홀딩스,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 950210,프레스티지바이오파마,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+006490,프리티,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 009810,플레이그램,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 086790,하나금융지주,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 293480,하나제약,KOSPI,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1026,6 +1024,7 @@
 309960,LB인베스트먼트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 073490,LIG아큐버,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 225190,LK삼양,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+091970,LSK아이로봇,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 060370,LS마린솔루션,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 417200,LS머트리얼즈,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 078020,LS증권,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1038,7 +1037,6 @@
 104200,NHN벅스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 054050,NH농우바이오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 063570,NICE인프라,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-222160,NPX,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 024940,PN풍년,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 332570,PS일렉트로닉스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 218410,RFHIC,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1049,6 +1047,8 @@
 019550,SBI인베스트먼트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 246960,SCL사이언스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 099220,SDN,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+056190,SFA,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+222080,SFA넥셀,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 036540,SFA반도체,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 255220,SG,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 040610,SG&G,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1060,7 +1060,6 @@
 067160,SOOP,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 289080,SV인베스트먼트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 041930,SY동아,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-013720,청보,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 089230,THE E&M,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 032540,TJ미디어,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 048770,TPC로보틱스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1090,7 +1089,6 @@
 035290,골드앤에스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 215000,골프존,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 121440,골프존홀딩스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-366030,나인앤컴퍼니,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 029480,광무,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 026910,광진실업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 465320,교보15호스팩,KOSDAQ,spac,,,2010-01-01,false,false,false,true,false,false,clean,false
@@ -1129,7 +1127,6 @@
 286750,나노실리칸첨단소재,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 247660,나노씨엠에스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 039860,나노엔텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-091970,LSK아이로봇,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 417010,나노팀,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 405920,나라셀라,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 478340,나라스페이스테크놀로지,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1142,6 +1139,7 @@
 138610,나이벡,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 130580,나이스디앤비,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 036800,나이스정보통신,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+366030,나인앤컴퍼니,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 267320,나인테크,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 111710,남화산업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 091590,남화토건,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1173,7 +1171,6 @@
 194700,노바렉스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 285490,노바텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 145170,노브랜드,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-106520,노블엠앤비,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 376930,노을,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 486990,노타,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 142280,녹십자엠에스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1334,7 +1331,9 @@
 084650,랩지노믹스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 217500,러셀,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 038390,레드캡투어,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+387690,레메디,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 294140,레몬,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+365660,레몬헬스케어,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 443250,레뷰코퍼레이션,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 228670,레이,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 228850,레이언스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1354,6 +1353,7 @@
 328130,루닛,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 038060,루멘스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 474170,루미르,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+195990,루트K,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 141080,리가켐바이오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 058470,리노공업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 016100,리더스코스메틱,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1376,6 +1376,7 @@
 424980,마이크로투나노,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 038290,마크로젠,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 477850,마키나락스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+0039P0,매드업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 267980,매일유업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 005990,매일홀딩스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 093520,매커스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1392,6 +1393,7 @@
 086900,메디톡스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 078160,메디포스트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 0088D0,메리츠제1호스팩,KOSDAQ,reit,,,2010-01-01,false,false,true,true,false,false,clean,false
+0165X0,메리츠제2호스팩,KOSDAQ,reit,,,2010-01-01,false,false,true,true,false,false,clean,false
 408920,메쎄이상,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 021880,메이슨캐피탈,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 0088M0,메쥬,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1450,7 +1452,6 @@
 086040,바이오톡스텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 188040,바이오포트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 099430,바이오플러스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-032980,바이온,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 308080,바이젠셀,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 043150,바텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 323990,박셀바이오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1595,6 +1596,7 @@
 081580,성우전자,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 045300,성우테크론,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 015750,성우하이텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+340930,성원에너텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 365340,성일하이텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 080470,성창오토텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 043260,성호전자,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1661,6 +1663,7 @@
 253450,스튜디오드래곤,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 408900,스튜디오미르,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 415380,스튜디오삼익,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+475040,스트라드비젼,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 013810,스페코,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 347700,스피어,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 049830,승일,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1720,7 +1723,6 @@
 475400,씨메스로보틱스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 109670,씨싸이트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 066790,씨씨에스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-222080,SFA넥셀,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 352480,씨앤씨인터내셔널,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 264660,씨앤지하이테크,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 352700,씨앤투스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1780,7 +1782,6 @@
 212710,아이에스티이,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 038880,아이에이,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 307180,아이엘,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-101390,아이엠,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 493280,아이엠바이오로직스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 461030,아이엠비디엑스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 451220,아이엠티,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1807,14 +1808,13 @@
 013310,아진산업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 059120,아진엑스텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 0007C0,아크릴,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-203690,아크솔루션스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 158430,아톤,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+297570,아틀라스링크,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 200350,아티스트스튜디오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 321820,아티스트컴퍼니,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 001540,안국약품,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 053800,안랩,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 065660,안트로젠,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-297570,아틀라스링크,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 260660,알리코제약,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 354320,알멕,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 361570,알비더블유,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1869,7 +1869,6 @@
 275630,에스에스알,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 031330,에스에이엠티,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 060540,에스에이티,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-056190,SFA,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 0008Z0,에스엔시스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 246250,에스엘에스바이오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 041510,에스엠,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1904,7 +1903,6 @@
 096690,에이루트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 298380,에이비엘바이오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 203400,에이비온,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-195990,루트K,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 003800,에이스침대,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 088800,에이스테크,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 241840,에이스토리,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -1935,7 +1933,6 @@
 0009K0,에임드바이오,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 230240,에치에프알,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 159910,에코글로우,KOSDAQ,preferred_stock,,,2010-01-01,true,false,false,false,false,false,clean,false
-230360,에코마케팅,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 097780,에코볼트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 038870,에코심플렉스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 448280,에코아이,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -2159,7 +2156,6 @@
 493790,유안타제17호스팩,KOSDAQ,spac,,,2010-01-01,false,false,false,true,false,false,clean,false
 263770,유에스티,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 388720,유일로보틱스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-340930,성원에너텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 023410,유진기업,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 056080,유진로봇,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 468760,유진스팩10호,KOSDAQ,spac,,,2010-01-01,false,false,false,true,false,false,clean,false
@@ -2305,6 +2301,7 @@
 337930,젝시믹스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 229000,젠큐릭스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 082270,젬백스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+153890,져스텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 034940,조아제약,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 067000,조이시티,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 309930,조이웍스앤코,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -2352,6 +2349,7 @@
 0011T0,채비,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 278280,천보,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 362320,청담글로벌,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
+013720,청보,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 066360,체리부로,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 047820,초록뱀미디어,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 094360,칩스앤미디어,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -2601,7 +2599,6 @@
 220100,퓨쳐켐,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 035200,프럼파스트,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 334970,프레스티지바이오로직스,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-227100,프로브잇,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 321260,프로이천,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 053610,프로텍,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 468530,프로티나,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
@@ -2682,8 +2679,8 @@
 039740,한국정보공학,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 053300,한국정보인증,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 025770,한국정보통신,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
-464440,한국제13호스팩,KOSDAQ,spac,,,2010-01-01,false,false,false,true,false,false,clean,false
 479880,한국제15호스팩,KOSDAQ,spac,,,2010-01-01,false,false,false,true,false,false,clean,false
+0164H0,한국제16호스팩,KOSDAQ,spac,,,2010-01-01,false,false,false,true,false,false,clean,false
 062970,한국첨단소재,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 023760,한국캐피탈,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false
 054040,한국컴퓨터,KOSDAQ,common_stock,,,2010-01-01,false,false,false,false,false,false,clean,false

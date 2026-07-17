@@ -48,6 +48,7 @@ def run_compass_pipeline(
     template_targets: list[TargetRow] | None = None,
     generated_at: str | None = None,
     auto_decompose: bool = True,
+    run_id: str = "",
 ) -> CompassPipelineResult:
     market = load_market_indicators(data_dir / "market_indicators.csv")
     rules = load_yaml(data_dir / "compass_rules.yaml")
@@ -77,8 +78,12 @@ def run_compass_pipeline(
         data_gate=data_gate,
         execution_level=execution_level,
         tier2=tier2,
+        output_dir=output_dir,
     )
-    allocation = build_portfolio_allocation(compass, profiles, profile_name=profile)
+    tilt_meta: dict = {}
+    allocation = build_portfolio_allocation(
+        compass, profiles, profile_name=profile, rules=rules, tilt_meta=tilt_meta,
+    )
 
     generated_targets: list[TargetRow] = []
     if auto_decompose:
@@ -127,6 +132,16 @@ def run_compass_pipeline(
         generated_targets=generated_targets,
         tier2_used=tier2 is not None,
         generated_at=ts,
+    )
+
+    from src.compass.judgment_log import write_compass_judgment_log
+
+    write_compass_judgment_log(
+        output_dir,
+        compass,
+        market,
+        tilt_meta=tilt_meta,
+        run_id=run_id or ts,
     )
 
     return CompassPipelineResult(

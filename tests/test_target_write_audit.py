@@ -134,6 +134,9 @@ def test_approval_bridge_write_allowed(tmp_path: Path) -> None:
     audit = get_last_target_write_audit(out)
     assert audit.get("run_id") == "run-test-1"
     assert audit.get("guard_result_after_write") == "PASS"
+    assert audit.get("write_material_change_count") == 1
+    assert audit.get("changed_rows_after_write") == audit.get("user_op_guard_diff_rows")
+    assert audit.get("user_op_guard_diff_rows") == 0  # synced user↔op
 
 
 def test_proposal_does_not_overwrite_operational_target(tmp_path: Path) -> None:
@@ -248,10 +251,21 @@ def test_apply_proposed_target_via_approval_bridge(tmp_path: Path) -> None:
         data_dir=data,
         output_dir=out,
         approved_by="human",
+        writer_module="ui.target_approval_actions",
     )
     audit = get_last_target_write_audit(out)
     assert audit.get("target_write_source") == "approval_bridge"
     assert audit.get("target_write_allowed") is True
+    assert audit.get("writer_module") == "ui.target_approval_actions"
+    assert "write_material_change_count" in audit
+
+
+def test_count_material_weight_changes_helper() -> None:
+    from src.alpha.target_portfolio_guard import count_material_weight_changes
+
+    before = [_row("005830", 10.0), _row("021240", 5.0)]
+    after = [_row("005830", 11.0), _row("021240", 5.0), _row("000660", 1.0)]
+    assert count_material_weight_changes(before, after) == 2
 
 
 def test_two_guard_evaluations_same_hash(tmp_path: Path) -> None:

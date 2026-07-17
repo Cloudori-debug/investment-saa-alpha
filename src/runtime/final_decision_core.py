@@ -316,11 +316,28 @@ def run_final_decision_core(inputs: FinalDecisionCoreInputs) -> FinalDecisionCor
     )
     from src.policy_cap import build_technical_status_block, resolve_policy_cap
 
+    computed_for_cap: str | None = None
+    if compass_result is not None and getattr(compass_result, "compass", None) is not None:
+        computed_for_cap = getattr(compass_result.compass, "computed_regime", None)
+        if computed_for_cap is not None and hasattr(computed_for_cap, "value"):
+            computed_for_cap = computed_for_cap.value
+        computed_for_cap = str(computed_for_cap) if computed_for_cap else None
+    if not computed_for_cap:
+        regime_path_early = output_dir / "compass_regime.json"
+        if regime_path_early.exists():
+            try:
+                computed_for_cap = (
+                    json.loads(regime_path_early.read_text(encoding="utf-8")).get("computed_regime")
+                )
+            except Exception:
+                computed_for_cap = None
+
     policy_cap_result = resolve_policy_cap(
         market,
         technical_scope=technical_scope,
         data_gate=data_gate,
         health_gate=health_gate,
+        computed_regime=str(computed_for_cap) if computed_for_cap else None,
     )
     execution_scope = policy_cap_result.capped_execution_scope  # type: ignore[assignment]
     technical_status_block = build_technical_status_block(

@@ -102,6 +102,10 @@ def _load_run_manifest(output_dir: Path) -> dict | None:
 
 def _check_regime_override(data_dir: Path, output_dir: Path, as_of: str) -> AcceptanceItem:
     from src.data_loader import load_market_indicators
+    from src.validation.regime_override_divergence import (
+        load_override_age_escalation_days,
+        load_override_age_warn_days,
+    )
 
     mi_path = data_dir / "market_indicators.csv"
     if not mi_path.exists():
@@ -139,7 +143,21 @@ def _check_regime_override(data_dir: Path, output_dir: Path, as_of: str) -> Acce
 
     if set_dt and as_dt:
         age = business_days_between(set_date or "", as_of)
-        if age > 5:
+        warn_days = load_override_age_warn_days()
+        esc_days = load_override_age_escalation_days()
+        if age > esc_days:
+            return AcceptanceItem(
+                "AC-05", "manual_regime", "warn",
+                f"override {age}영업일 경과 — 장기 미검토, 재검토 시급(자동 해제 없음)",
+                scope="core",
+                detail={
+                    "set_date": set_date,
+                    "age_business_days": age,
+                    "escalation_threshold_days": esc_days,
+                    "escalated": True,
+                },
+            )
+        if age > warn_days:
             return AcceptanceItem(
                 "AC-05", "manual_regime", "warn",
                 f"override {age}영업일 경과 — 갱신 또는 만료 설정 권장",
@@ -162,6 +180,68 @@ def _check_regime_override(data_dir: Path, output_dir: Path, as_of: str) -> Acce
             detail={"reason": reason, "expires": expires},
         )
     return AcceptanceItem("AC-05", "manual_regime", "pass", "override 정책 충족", scope="core")
+
+
+def _check_regime_early_review(data_dir: Path, output_dir: Path) -> AcceptanceItem:
+    """AC-05c — 설정일 대비 낙폭 악화/회복 조기 재검토 알림. 자동 완화·해제 없음."""
+    from src.data_loader import load_market_indicators
+    from src.validation.regime_override_divergence import assess_early_regime_review_from_data
+
+    mi_path = data_dir / "market_indicators.csv"
+    if not mi_path.exists():
+        return AcceptanceItem(
+            "AC-05c", "regime_early_review", "pass", "market_indicators 없음", scope="core",
+        )
+
+    market = load_market_indicators(mi_path)
+    override_active = False
+    regime_path = output_dir / "compass_regime.json"
+    if regime_path.exists():
+        override_active = bool(
+            (json.loads(regime_path.read_text(encoding="utf-8")).get("override") or {}).get("active")
+        )
+    set_date = getattr(market, "regime_set_date", None)
+    assessment = assess_early_regime_review_from_data(
+        data_dir,
+        override_active=override_active,
+        regime_set_date=str(set_date) if set_date else None,
+        kospi=getattr(market, "kospi", None),
+        kospi_recent_high=getattr(market, "kospi_recent_high", None),
+    )
+    # AcceptanceItem은 pass|warn|fail만 — info는 pass + detail로 표시
+    status: CheckStatus = "warn" if assessment.status == "warn" else "pass"
+    return AcceptanceItem(
+        "AC-05c",
+        "regime_early_review",
+        status,
+        assessment.message,
+        scope="core",
+        detail={**assessment.detail, "level": assessment.status, "trigger": assessment.trigger},
+    )
+
+
+def _check_regime_override_divergence(data_dir: Path, output_dir: Path) -> AcceptanceItem:
+    """AC-05b — 산출 vs 적용 레짐 격차(크기). 시간 기반 AC-05와 분리. 자동 해제 없음."""
+    from src.validation.regime_override_divergence import assess_regime_divergence_from_outputs
+
+    assessment = assess_regime_divergence_from_outputs(data_dir, output_dir)
+    if assessment is None:
+        return AcceptanceItem(
+            "AC-05b",
+            "regime_override_divergence",
+            "pass",
+            "compass_regime.json 없음",
+            scope="core",
+        )
+
+    return AcceptanceItem(
+        "AC-05b",
+        "regime_override_divergence",
+        assessment.status,  # type: ignore[arg-type]
+        assessment.message,
+        scope="core",
+        detail=assessment.detail,
+    )
 
 
 def _check_provenance(data_dir: Path) -> AcceptanceItem:
@@ -555,6 +635,8 @@ def run_acceptance_check(data_dir: Path, output_dir: Path) -> AcceptanceReport:
     items.append(AcceptanceItem("AC-04", "alpha_gate", ag_st, f"gate={ag_str}", scope="alpha", detail=alpha_detail))
 
     items.append(_check_regime_override(data_dir, output_dir, as_of))
+    items.append(_check_regime_override_divergence(data_dir, output_dir))
+    items.append(_check_regime_early_review(data_dir, output_dir))
     items.append(_check_provenance(data_dir))
     items.append(_check_market_200ma_coherence(data_dir, output_dir))
 
@@ -587,12 +669,20 @@ def run_acceptance_check(data_dir: Path, output_dir: Path) -> AcceptanceReport:
     mi_path = data_dir / "market_indicators.csv"
     market_for_cap = load_market_indicators(mi_path) if mi_path.exists() else None
     technical_scope_str = str(log.get("technical_execution_scope") or pipeline_scope or "ETF_ONLY")
+    computed_for_cap = None
+    regime_path = output_dir / "compass_regime.json"
+    if regime_path.exists():
+        try:
+            computed_for_cap = json.loads(regime_path.read_text(encoding="utf-8")).get("computed_regime")
+        except Exception:
+            computed_for_cap = None
     if market_for_cap is not None:
         policy_cap = resolve_policy_cap(
             market_for_cap,
             technical_scope=technical_scope_str,
             data_gate=unified,
             health_gate=str(log.get("health_gate", "GREEN")),
+            computed_regime=str(computed_for_cap) if computed_for_cap else None,
         )
     else:
         from src.models import MarketIndicators as MI
@@ -601,6 +691,7 @@ def run_acceptance_check(data_dir: Path, output_dir: Path) -> AcceptanceReport:
             technical_scope=technical_scope_str,
             data_gate=unified,
             health_gate=str(log.get("health_gate", "GREEN")),
+            computed_regime=str(computed_for_cap) if computed_for_cap else None,
         )
 
     technical_overall = overall

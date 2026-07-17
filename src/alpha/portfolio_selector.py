@@ -148,6 +148,41 @@ def _assign_role(row: dict[str, Any]) -> str:
     return "balanced"
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def load_satellite_single_name_sleeve_pct() -> float:
+    """운영 진실: alpha_portfolio/config/target_matrix.yaml satellite_cap."""
+    from src.config import load_yaml
+
+    cfg = load_yaml(_repo_root() / "alpha_portfolio" / "config" / "target_matrix.yaml")
+    return float((cfg.get("satellite_cap") or {}).get("single_name_sleeve_pct", 5))
+
+
+def sleeve_pct_to_portfolio(sleeve_pct: float, kr_alpha_budget: float) -> float:
+    """슬리브 % → 전체 포트폴리오 % (target_matrix.sleeve_to_portfolio와 동일)."""
+    return round(float(sleeve_pct) * float(kr_alpha_budget) / 100.0, 2)
+
+
+def resolve_proposed_weight_cap(
+    role: str,
+    *,
+    kr_alpha_budget: float,
+    legacy_max_proposed_pct: float,
+    satellite_sleeve_pct: float | None = None,
+) -> tuple[float, str]:
+    """role별 제안 상한(포트 %). satellite만 target_matrix 슬리브 캡을 동적으로 환산."""
+    if str(role).strip().lower() == "satellite":
+        sleeve = (
+            float(satellite_sleeve_pct)
+            if satellite_sleeve_pct is not None
+            else load_satellite_single_name_sleeve_pct()
+        )
+        return sleeve_pct_to_portfolio(sleeve, kr_alpha_budget), "target_matrix.satellite_cap"
+    return float(legacy_max_proposed_pct), "max_proposed_weight_pct"
+
+
 def build_shortlist_and_proposal(
     scored: list[dict[str, Any]],
     config: dict[str, Any],
@@ -272,6 +307,7 @@ def build_shortlist_and_proposal(
 
     max_single_pct = float(sel.get("max_proposed_weight_pct", 8.0))
     min_proposal_n = int(sel.get("min_proposal_count", target_n))
+    satellite_sleeve_pct = load_satellite_single_name_sleeve_pct()
 
     if len(selected) < min_proposal_n:
         picked = {r["ticker"] for r in selected}
@@ -303,23 +339,33 @@ def build_shortlist_and_proposal(
     n_sel = len(selected) or 1
     budget = float(kr_alpha_budget) if kr_alpha_budget else default_weight * target_n
     equal = budget / n_sel
-    weight = round(min(equal, max_single_pct), 2)
-    cash_buffer = round(budget - weight * n_sel, 2)
-    if cash_buffer > 0.5:
+    sat_cap_at_budget = sleeve_pct_to_portfolio(satellite_sleeve_pct, budget)
+    if abs(max_single_pct - sat_cap_at_budget) > 0.05:
         warnings.append(
-            f"kr_alpha cash buffer {cash_buffer:.1f}%p "
-            f"(종목당 최대 {max_single_pct:.0f}%·분산 {n_sel}종)"
+            f"max_proposed_weight_pct={max_single_pct:.2f}% (non-satellite) vs "
+            f"satellite sleeve {satellite_sleeve_pct:.0f}%→{sat_cap_at_budget:.2f}% portfolio "
+            f"@ kr_alpha_budget={budget:.2f}% — satellite uses target_matrix"
         )
 
     proposal: list[PortfolioProposalRow] = []
+    weight_sum = 0.0
     for i, row in enumerate(selected, start=1):
+        role = _assign_role(row)
+        role_cap, _cap_src = resolve_proposed_weight_cap(
+            role,
+            kr_alpha_budget=budget,
+            legacy_max_proposed_pct=max_single_pct,
+            satellite_sleeve_pct=satellite_sleeve_pct,
+        )
+        weight = round(min(equal, role_cap), 2)
+        weight_sum += weight
         proposal.append(
             PortfolioProposalRow(
                 rank=i,
                 ticker=row["ticker"],
                 name=row.get("name", row["ticker"]),
                 sector=normalize_sector(row.get("sector", "")),
-                role=_assign_role(row),
+                role=role,
                 total_score=float(row.get("total_score", 0)),
                 quality_score=float(row.get("quality_score", 0)),
                 valuation_score=float(row.get("valuation_score", 0)),
@@ -330,6 +376,14 @@ def build_shortlist_and_proposal(
                 is_incumbent=row["ticker"] in incumbents,
                 eligible_action=str(row.get("eligible_action", "")),
             )
+        )
+
+    cash_buffer = round(budget - weight_sum, 2)
+    if cash_buffer > 0.5:
+        warnings.append(
+            f"kr_alpha cash buffer {cash_buffer:.1f}%p "
+            f"(satellite 캡 sleeve {satellite_sleeve_pct:.0f}%→{sat_cap_at_budget:.2f}% · "
+            f"기타 max {max_single_pct:.0f}% · 분산 {n_sel}종)"
         )
 
     return SelectionResult(shortlist=shortlist_rows, proposal=proposal, warnings=warnings)

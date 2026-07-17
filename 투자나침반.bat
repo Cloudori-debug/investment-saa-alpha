@@ -1,100 +1,76 @@
 @echo off
-
 chcp 65001 >nul
-
-title 투자 나침반
-
+setlocal
+set PYTHONUNBUFFERED=1
+title Compass
 cd /d "%~dp0"
 
-
-
-call "%~dp0_env_check.bat"
-
-if errorlevel 1 exit /b 1
-
-
-
-:MENU
-
-cls
-
-echo.
-
-echo  ================================================
-
-echo        투자 나침반 - 운용 콘솔
-
-echo  ================================================
-
-echo.
-
-echo   모든 운용(설정·데이터·분석·승인)은 브라우저 UI에서 합니다.
-
-echo.
-
-python -c "from pathlib import Path; from src.settings.user_secrets import credential_status; s=credential_status(Path('data')); print('  API  DART:', 'OK' if s['dart'] else '미설정', ' | KRX:', 'OK' if s['krx'] else '미설정', '  (UI [설정] 탭에서 저장)')" 2>nul
-
-echo.
-
-echo   [1] UI 실행          (브라우저 — 권장, 매일 사용)
-
-echo   [2] 설치 / 업데이트  (최초 1회 또는 패키지 갱신)
-
-echo   [0] 종료
-
-echo.
-
-choice /C 120 /M "선택 (1=UI, 2=설치, 0=종료): "
-
-if errorlevel 4 (
-
+where python >nul 2>&1
+if errorlevel 1 (
     echo.
-
-    echo  [오류] 메뉴 입력에 실패했습니다. 아무 키나 누르면 다시 시도합니다.
-
-    pause >nul
-
-    goto MENU
-
+    echo [ERROR] Python not found.
+    pause
+    exit /b 1
 )
 
-set CHOICE=%ERRORLEVEL%
-
-
-
-if %CHOICE%==1 goto RUN_UI
-
-if %CHOICE%==2 goto RUN_INSTALL
-
-if %CHOICE%==3 goto EXIT
-
+:MENU
+cls
 echo.
-
-echo  [안내] 1, 2 또는 0을 선택하세요.
-
-pause >nul
-
+echo ================================================
+echo   Compass Launcher
+echo ================================================
+echo.
+python "%~dp0scripts\launcher_cred_status.py" 2>nul
+if errorlevel 1 echo   API: unavailable
+echo.
+echo [1] UI
+echo [2] Install
+echo [3] Analysis
+echo [0] Exit
+echo.
+choice /C 1230 /N /M "Select: "
+if errorlevel 4 goto EXIT
+if errorlevel 3 goto RUN_ANALYSIS
+if errorlevel 2 goto RUN_INSTALL
+if errorlevel 1 goto RUN_UI
 goto MENU
-
-
 
 :RUN_UI
-
-call "%~dp0UI실행.bat"
-
+python -c "import streamlit" >nul 2>&1
+if errorlevel 1 (
+    echo Installing...
+    python -m pip install --upgrade pip
+    python -m pip install -e ".[dev,ui,data]"
+    if errorlevel 1 goto FAIL
+)
+echo.
+echo UI starting. Ctrl+C to stop.
+echo Phone: http://PC-IP:8501 same Wi-Fi only.
+echo.
+streamlit run "%~dp0alpha_dashboard.py" --server.address 0.0.0.0
+if errorlevel 1 goto FAIL
+pause
 goto MENU
-
-
 
 :RUN_INSTALL
-
-call "%~dp0설치.bat"
-
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev,ui,data]"
+if errorlevel 1 goto FAIL
+pause
 goto MENU
 
+:RUN_ANALYSIS
+python -m src.main
+if errorlevel 1 goto FAIL
+pause
+goto MENU
 
+:FAIL
+echo.
+echo [ERROR] Failed.
+pause
+goto MENU
 
 :EXIT
-
+endlocal
 exit /b 0
-

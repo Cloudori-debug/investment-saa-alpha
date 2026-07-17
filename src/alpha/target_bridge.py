@@ -9,10 +9,13 @@ from typing import Any, Literal
 
 import pandas as pd
 
+from src.config import load_yaml
 from src.data_loader import _normalize_ticker, load_target_portfolio, normalize_target_weights_to_100, write_target_portfolio
 from src.models import TargetRow
 
 ChangeType = Literal["add", "trim", "remove", "adjust", "unchanged"]
+
+_BLOCKED_ADD_ACTIONS = frozenset({"WATCH", "BLOCK_NEW_BUY", "NO_NEW"})
 
 
 @dataclass
@@ -50,6 +53,77 @@ def kr_alpha_target_sum(targets: list[TargetRow]) -> float:
     return round(sum(t.target_weight for t in targets if t.asset_group == "kr_alpha"), 2)
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _load_target_matrix_cfg() -> dict[str, Any]:
+    return load_yaml(_repo_root() / "alpha_portfolio" / "config" / "target_matrix.yaml")
+
+
+def _import_compute_bands():
+    """alpha_portfolio target_matrix.compute_bands — monorepo 경로 import."""
+    import importlib.util
+    import sys
+
+    mod_name = "alpha_portfolio_target_matrix"
+    cached = sys.modules.get(mod_name)
+    if cached is not None and hasattr(cached, "compute_bands"):
+        return cached.compute_bands
+
+    alpha_src = _repo_root() / "alpha_portfolio" / "src"
+    mod_path = alpha_src / "target_matrix.py"
+    alpha_src_s = str(alpha_src)
+    if alpha_src_s not in sys.path:
+        sys.path.insert(0, alpha_src_s)
+    spec = importlib.util.spec_from_file_location(mod_name, mod_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"cannot load target_matrix from {mod_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[mod_name] = module
+    spec.loader.exec_module(module)
+    return module.compute_bands
+
+
+def infer_tier_from_role(role: str | None, tier: str | None = None) -> str:
+    raw = str(tier or role or "").strip().lower()
+    if raw in {"satellite", "sat"}:
+        return "Satellite"
+    return "Core"
+
+
+def compute_add_bands(
+    target_weight: float,
+    *,
+    role: str | None = None,
+    tier: str | None = None,
+    kr_alpha_budget: float | None = None,
+) -> tuple[float, float]:
+    """신규 add용 min/max — target_matrix.compute_bands (기본 1.0/4.0 폐기).
+
+    제안 비중이 satellite sleeve 캡보다 클 때도 제안 target이 밴드 안에 들어가도록
+    min/max를 target에 맞게 클램프한다 (경고 회피용 임의 확대가 아니라 제안값 정합).
+    """
+    compute_bands = _import_compute_bands()
+    cfg = _load_target_matrix_cfg()
+    tw = float(target_weight)
+    budget = float(kr_alpha_budget) if kr_alpha_budget is not None else max(tw * 4.0, 20.0)
+    min_w, max_w = compute_bands(tw, infer_tier_from_role(role, tier), cfg, budget)
+    min_w = min(min_w, tw)
+    max_w = max(max_w, tw)
+    return round(min_w, 2), round(max_w, 2)
+
+
+def scale_kr_alpha_row_to_budget(row: TargetRow, factor: float) -> TargetRow:
+    """예산 스케일 시 target과 min/max를 동일 factor로 갱신 (compass decompose와 동일 원칙)."""
+    row.target_weight = round(row.target_weight * factor, 2)
+    row.min_weight = round(row.min_weight * factor, 2)
+    row.max_weight = round(row.max_weight * factor, 2)
+    if row.min_weight > row.max_weight:
+        row.min_weight = row.max_weight
+    return row
+
+
 def _pick_name(ticker: str, raw_name: str | None) -> str | None:
     name = str(raw_name or "").strip()
     code = _normalize_ticker(ticker)
@@ -64,10 +138,11 @@ def resolve_add_candidate(
     data_dir: Path | None = None,
     pools: list[dict[str, Any]] | None = None,
     default_new_weight: float = 2.0,
-    default_min_weight: float = 1.0,
-    default_max_weight: float = 4.0,
+    default_min_weight: float | None = None,
+    default_max_weight: float | None = None,
+    kr_alpha_budget: float | None = None,
 ) -> dict[str, Any]:
-    """추가 후보 dict — name을 universe·후보 풀에서 보강."""
+    """추가 후보 dict — name을 universe·후보 풀에서 보강. min/max는 compute_bands."""
     code = _normalize_ticker(ticker)
     merged: dict[str, Any] = {"ticker": code}
 
@@ -96,9 +171,26 @@ def resolve_add_candidate(
         merged["name"] = code
 
     merged.setdefault("target_weight", default_new_weight)
-    merged.setdefault("min_weight", default_min_weight)
-    merged.setdefault("max_weight", default_max_weight)
     merged.setdefault("role", "alpha_screener")
+
+    has_min = merged.get("min_weight") is not None and str(merged.get("min_weight")).strip() != ""
+    has_max = merged.get("max_weight") is not None and str(merged.get("max_weight")).strip() != ""
+    if has_min and has_max:
+        pass
+    elif default_min_weight is not None and default_max_weight is not None:
+        merged.setdefault("min_weight", default_min_weight)
+        merged.setdefault("max_weight", default_max_weight)
+    else:
+        min_w, max_w = compute_add_bands(
+            float(merged["target_weight"]),
+            role=str(merged.get("role") or ""),
+            tier=str(merged.get("tier") or "") or None,
+            kr_alpha_budget=kr_alpha_budget,
+        )
+        if not has_min:
+            merged["min_weight"] = min_w
+        if not has_max:
+            merged["max_weight"] = max_w
     return merged
 
 
@@ -110,8 +202,8 @@ def propose_target_changes(
     remove_tickers: set[str],
     kr_alpha_budget: float | None = None,
     default_new_weight: float = 2.0,
-    default_min_weight: float = 1.0,
-    default_max_weight: float = 4.0,
+    default_min_weight: float | None = None,
+    default_max_weight: float | None = None,
     data_dir: Path | None = None,
 ) -> TargetProposal:
     """Alpha 승인안 기반 target_portfolio 제안 (자동 반영 아님)."""
@@ -184,6 +276,7 @@ def propose_target_changes(
             default_new_weight=default_new_weight,
             default_min_weight=default_min_weight,
             default_max_weight=default_max_weight,
+            kr_alpha_budget=kr_alpha_budget,
         )
         ticker = str(enriched["ticker"])
         if data_dir is not None:
@@ -212,8 +305,8 @@ def propose_target_changes(
             sector=str(enriched.get("sector", "")),
             role=str(enriched.get("role", "alpha_screener")),
             target_weight=weight,
-            min_weight=float(enriched.get("min_weight", default_min_weight)),
-            max_weight=float(enriched.get("max_weight", default_max_weight)),
+            min_weight=float(enriched["min_weight"]),
+            max_weight=float(enriched["max_weight"]),
         )
         row_map[ticker] = row
         changes.append(
@@ -229,7 +322,7 @@ def propose_target_changes(
             if row.asset_group != "kr_alpha":
                 continue
             old = row.target_weight
-            row.target_weight = round(old * factor, 2)
+            scale_kr_alpha_row_to_budget(row, factor)
             if abs(old - row.target_weight) > 0.01:
                 changes.append(
                     TargetChange(
@@ -317,8 +410,13 @@ def apply_proposed_target(
     output_dir: Path | None = None,
     approved_by_user: bool = True,
     override_previous_removal: frozenset[str] | None = None,
-) -> Path:
-    """사람 승인 후 data/target_portfolio.csv 반영. 백업 필수."""
+    write_reason: str | None = None,
+    writer_module: str | None = None,
+):
+    """사람 승인 후 data/target_portfolio.csv 반영. 백업 필수.
+
+    Returns TargetWriteResult (audit includes write_material_change_count).
+    """
     from src.alpha.target_write_audit import write_operational_target
     from src.validation.bundle_consistency import resolve_pipeline_run_id
 
@@ -341,13 +439,14 @@ def apply_proposed_target(
     rows, stripped = filter_blocked_reintroduction_rows(data_dir, rows)
     proposal.warnings.extend(stripped)
 
+    reason = write_reason or f"alpha_proposal_approved_by={approved_by}"
     result = write_operational_target(
         data_dir,
         rows,
         source="approval_bridge",
-        reason=f"alpha_proposal_approved_by={approved_by}",
+        reason=reason,
         approved_by_user=approved_by_user,
-        writer_module="target_bridge.apply_proposed_target",
+        writer_module=writer_module or "target_bridge.apply_proposed_target",
         output_dir=out_dir,
         run_id=pipeline_run_id,
         proposal_source_id=str(out_dir / "proposals" / "target_portfolio_proposed.csv"),
@@ -355,8 +454,8 @@ def apply_proposed_target(
         override_previous_removal=override_previous_removal,
     )
     if result.blocked or not result.path:
-        reason = result.audit.get("target_write_reason", "target write blocked")
-        raise TargetPortfolioWriteBlockedError(reason)
+        blocked_reason = result.audit.get("target_write_reason", "target write blocked")
+        raise TargetPortfolioWriteBlockedError(blocked_reason)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     log_path = out_dir / "approval_log.jsonl"
@@ -366,13 +465,16 @@ def apply_proposed_target(
         "approved_by": approved_by,
         "target_path": str(result.path),
         "change_count": len(proposal.changes),
+        "write_material_change_count": result.audit.get("write_material_change_count", 0),
         "kr_alpha_sum": proposal.kr_alpha_sum,
         "warnings": proposal.warnings,
+        "write_reason": reason,
+        "writer_module": result.audit.get("writer_module"),
     }
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
-    return result.path
+    return result
 
 
 def default_trim_candidates(holdings_review: list[dict]) -> set[str]:
@@ -402,7 +504,8 @@ def default_add_candidates(
         if proposal:
             out: list[dict] = []
             for row in proposal[:limit]:
-                if row.get("eligible_action") == "NO_NEW":
+                action = str(row.get("eligible_action") or "").strip().upper()
+                if action in _BLOCKED_ADD_ACTIONS:
                     continue
                 if str(row.get("grade", "")) == "Reject":
                     continue
@@ -425,6 +528,9 @@ def default_add_candidates(
 
     out = []
     for row in candidates:
+        action = str(row.get("eligible_action") or "").strip().upper()
+        if action in _BLOCKED_ADD_ACTIONS:
+            continue
         if row.get("eligible_action") != "BUY_CANDIDATE":
             continue
         if row.get("grade") != "A":
@@ -436,3 +542,76 @@ def default_add_candidates(
         if len(out) >= limit:
             break
     return out
+
+
+def build_band_resync_proposal(
+    current: list[TargetRow],
+    *,
+    profiles_path: Path | None = None,
+    profile_name: str | None = None,
+    draft_path: Path | None = None,
+) -> TargetProposal:
+    """kr_alpha min/max 재동기화.
+
+    1) draft에 있는 종목: draft 밴드 × (live_target / draft_target) — 예산 스케일 드리프트 역보정
+    2) draft에 없는 종목(071050 등): compute_bands(+ 제안 target 정합 클램프)
+    non-kr_alpha는 유지.
+    """
+    from src.alpha.target_draft_bridge import default_target_draft_path, load_target_draft
+
+    _ = profiles_path, profile_name
+    draft_path = draft_path or default_target_draft_path()
+    draft_map: dict[str, Any] = {}
+    if draft_path.exists():
+        draft_df = load_target_draft(draft_path)
+        for _, drow in draft_df.iterrows():
+            draft_map[_normalize_ticker(str(drow["ticker"]))] = drow
+
+    kr_sum = kr_alpha_target_sum(current)
+    resynced: list[TargetRow] = []
+    changes: list[TargetChange] = []
+
+    for row in current:
+        if row.asset_group != "kr_alpha":
+            resynced.append(row.model_copy(deep=True))
+            continue
+
+        prev_min, prev_max = row.min_weight, row.max_weight
+        drow = draft_map.get(row.ticker)
+        if drow is not None and float(drow.get("target_weight") or 0) > 0:
+            factor = row.target_weight / float(drow["target_weight"])
+            min_w = round(float(drow.get("min_weight") or 0) * factor, 2)
+            max_w = round(float(drow.get("max_weight") or 0) * factor, 2)
+        else:
+            min_w, max_w = compute_add_bands(
+                row.target_weight,
+                role=row.role,
+                kr_alpha_budget=kr_sum,
+            )
+
+        min_w = min(min_w, row.target_weight)
+        max_w = max(max_w, row.target_weight)
+        updated = row.model_copy(deep=True)
+        updated.min_weight = round(min_w, 2)
+        updated.max_weight = round(max_w, 2)
+        resynced.append(updated)
+        if abs(prev_min - updated.min_weight) >= 0.01 or abs(prev_max - updated.max_weight) >= 0.01:
+            changes.append(
+                TargetChange(
+                    updated.ticker,
+                    updated.name,
+                    "adjust",
+                    row.target_weight,
+                    updated.target_weight,
+                    updated.asset_group,
+                    "band_resync",
+                )
+            )
+
+    return TargetProposal(
+        rows=resynced,
+        changes=changes,
+        kr_alpha_sum=kr_sum,
+        kr_alpha_budget=kr_sum,
+        warnings=["band_resync via draft-factor scale / compute_bands"],
+    )

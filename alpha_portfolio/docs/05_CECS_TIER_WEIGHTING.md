@@ -2,6 +2,11 @@
 
 > 원본: `kospi_alpha_tier_weighting_spec.md` (외부 명세)  
 > 구현 위치: `alpha_portfolio` 패키지
+>
+> **운영 연결 상태 (2026-07-12):** 이 트랙은 **live `target_portfolio` 산출에 연결되지 않은
+> 별도 연구/실험 트랙**이다. 승인·밴드·QVM 제안의 운영 진실은
+> `alpha_portfolio/config/target_matrix.yaml` (`satellite_cap` 등)이다.
+> CECS 코드·테스트는 유지하되, 숫자를 live 캡으로 이식하지 말 것.
 
 ## 필드 매핑 (명세 vs 실제 코드)
 

@@ -197,9 +197,53 @@ def test_compute_full_diff():
     assert any(d.change_type == "add" for d in diffs)
 
 
-@pytest.mark.skipif(not OUTPUT_DIR.exists(), reason="outputs not generated")
-def test_load_kr_alpha_budget_from_outputs():
-    budget = load_kr_alpha_budget(OUTPUT_DIR)
-    if (OUTPUT_DIR / "target_asset_allocation.csv").exists():
-        assert budget is not None
-        assert budget > 0
+def test_propose_budget_scale_updates_minmax():
+    from src.models import TargetRow
+
+    current = [
+        TargetRow(
+            ticker="030200", name="KT", asset_group="kr_alpha", sector="telecom",
+            role="quality_dividend", target_weight=7.0, min_weight=5.36, max_weight=16.05,
+        ),
+        TargetRow(
+            ticker="021240", name="코웨이", asset_group="kr_alpha", sector="consumer",
+            role="quality_defensive", target_weight=7.0, min_weight=5.36, max_weight=16.05,
+        ),
+    ]
+    proposal = propose_target_changes(
+        current,
+        add_candidates=[],
+        trim_tickers=set(),
+        remove_tickers=set(),
+        kr_alpha_budget=8.0,
+    )
+    assert proposal.kr_alpha_sum <= 8.01
+    for row in proposal.rows:
+        if row.asset_group != "kr_alpha":
+            continue
+        assert abs(row.min_weight / row.target_weight - 5.36 / 7.0) < 0.02
+        assert row.min_weight <= row.target_weight <= row.max_weight
+
+
+def test_default_add_candidates_excludes_watch():
+    adds = default_add_candidates(
+        [
+            {"ticker": "071050", "grade": "B", "eligible_action": "WATCH"},
+            {"ticker": "035420", "grade": "A", "eligible_action": "BUY_CANDIDATE"},
+        ],
+        limit=5,
+    )
+    assert all(str(a.get("ticker")) != "071050" for a in adds)
+    assert any(str(a.get("ticker")) == "035420" for a in adds)
+
+
+def test_resolve_add_candidate_uses_compute_bands_not_1_4():
+    from src.alpha.target_bridge import resolve_add_candidate
+
+    row = resolve_add_candidate(
+        "071050",
+        pools=[{"ticker": "071050", "name": "한국금융지주", "role": "satellite", "target_weight": 5.56}],
+        kr_alpha_budget=21.85,
+    )
+    assert float(row["min_weight"]) != 1.0 or float(row["max_weight"]) != 4.0
+    assert float(row["min_weight"]) <= float(row["target_weight"]) <= float(row["max_weight"])

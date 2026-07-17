@@ -94,6 +94,90 @@ def _build_gap_table(actual: pd.DataFrame, optimal: pd.DataFrame) -> pd.DataFram
     return merged[cols].sort_values(["asset_group", "gap"], ascending=[True, False])
 
 
+def exit_status_label_for_gap(
+    *,
+    on_board: bool,
+    targets_missing: bool,
+    exit_leg: str | None,
+    fund_proximity_pct: float | None = None,
+    val_proximity_pct: float | None = None,
+) -> str:
+    """Display-only TP reach status for Gap table (not yaml 설정 여부)."""
+    if not on_board:
+        return "—"
+    if targets_missing:
+        return "목표 미설정"
+    leg = str(exit_leg or "NONE").strip().upper()
+    if leg in {"FUND", "VAL", "BOTH"}:
+        return f"도달({leg})"
+    from src.alpha.take_profit_thesis import format_proximity_gap_suffix
+
+    suffix = format_proximity_gap_suffix(fund_proximity_pct, val_proximity_pct)
+    return f"미도달 {suffix}".strip() if suffix else "미도달"
+
+
+def enrich_gap_with_exit_status(gap_df: pd.DataFrame, board: pd.DataFrame | None) -> pd.DataFrame:
+    """Merge read-only 익절상태 onto Gap rows from alpha_signal_board (no Gap recalculation)."""
+    out = gap_df.copy()
+    if out.empty:
+        out["익절상태"] = []
+        return out
+
+    def _missing(v) -> bool:
+        if isinstance(v, bool):
+            return v
+        return str(v).strip().lower() in {"true", "1", "yes"}
+
+    def _opt_float(v) -> float | None:
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return None
+        s = str(v).strip()
+        if s == "" or s.lower() in {"nan", "none"}:
+            return None
+        try:
+            return float(s)
+        except (TypeError, ValueError):
+            return None
+
+    lookup: dict[str, tuple[bool, str, float | None, float | None]] = {}
+    if board is not None and not board.empty and "ticker" in board.columns:
+        for _, row in board.iterrows():
+            t = str(row.get("ticker", "")).strip()
+            if not t:
+                continue
+            lookup[t] = (
+                _missing(row.get("targets_missing")),
+                str(row.get("exit_leg", "NONE")),
+                _opt_float(row.get("fund_proximity_pct")),
+                _opt_float(row.get("val_proximity_pct")),
+            )
+
+    labels: list[str] = []
+    for t in out["ticker"].astype(str).str.strip():
+        if t in lookup:
+            missing, leg, fp, vp = lookup[t]
+            labels.append(
+                exit_status_label_for_gap(
+                    on_board=True,
+                    targets_missing=missing,
+                    exit_leg=leg,
+                    fund_proximity_pct=fp,
+                    val_proximity_pct=vp,
+                )
+            )
+        else:
+            labels.append(exit_status_label_for_gap(on_board=False, targets_missing=False, exit_leg=None))
+    out["익절상태"] = labels
+    cols = [c for c in out.columns if c != "익절상태"]
+    # Place after gap when present.
+    if "gap" in cols:
+        i = cols.index("gap") + 1
+        cols = cols[:i] + ["익절상태"] + cols[i:]
+    else:
+        cols = cols + ["익절상태"]
+    return out[cols]
+
+
 def _file_cache_key(*paths: Path) -> str:
     parts: list[str] = []
     for path in paths:
@@ -445,18 +529,24 @@ def render_portfolio_page(data_dir: Path, output_dir: Path) -> None:
 
     st.divider()
     st.subheader("실제 vs 목표 Gap")
+    st.caption(
+        "익절상태 = 목표 미설정 / 미도달(근접도%) / 도달(FUND·VAL·BOTH) — "
+        "상세 설명은 알파 → 보유 리뷰 참고"
+    )
     if optimal_df is None or live_preview.empty:
         st.caption("실제 포트 저장 + 전체 분석 실행 후 비교표가 채워집니다.")
     else:
         gap_path = output_dir / "current_vs_target.csv"
+        board = _load_csv(output_dir / "alpha_signal_board.csv")
         if gap_path.exists():
             gap_df = pd.read_csv(gap_path, dtype=str, keep_default_na=False)
             for col in ("current_weight", "target_weight", "gap"):
                 if col in gap_df.columns:
                     gap_df[col] = pd.to_numeric(gap_df[col], errors="coerce").fillna(0)
-            st.dataframe(gap_df, use_container_width=True, height=320)
         else:
-            st.dataframe(_build_gap_table(live_preview, optimal_df), use_container_width=True, height=320)
+            gap_df = _build_gap_table(live_preview, optimal_df)
+        gap_df = enrich_gap_with_exit_status(gap_df, board)
+        st.dataframe(gap_df, use_container_width=True, height=320)
 
         act_roll = _group_rollup(live_preview, "weight_pct")
         opt_roll = _group_rollup(optimal_df, "target_weight")

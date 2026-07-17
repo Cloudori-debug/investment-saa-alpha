@@ -1,4 +1,8 @@
-"""CECS 티어별 비중 배분 및 스코어링 엔진 연결."""
+"""CECS 티어별 비중 배분 및 스코어링 엔진 연결.
+
+참고: live target 산출 경로에는 연결되지 않은 별도 연구/실험 트랙이다.
+운영 진실(위성 단일 종목 상한 등)은 alpha_portfolio/config/target_matrix.yaml 을 따른다.
+"""
 
 from __future__ import annotations
 

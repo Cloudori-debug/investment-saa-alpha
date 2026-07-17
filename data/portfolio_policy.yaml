@@ -8,10 +8,33 @@ risk_limits:
   sector_max: 30
   theme_max: 25
   kr_alpha_max: 35
+  # Standing floor (unchanged). Approved hybrid target ~6% is a TEMP EXCEPTION — see
+  # kr_alpha_min_temp_exception below. Do NOT treat 6% as the new permanent floor.
   kr_alpha_min: 20
   cash_short_bond_min: 25
   cash_short_bond_target: 32
   btc_max: 2
+
+# Temporary exception to risk_limits.kr_alpha_min (numbers above stay at 20).
+# Spec: docs/KR_ALPHA_POLICY_FLOOR_TEMP_EXCEPTION_SPEC.md
+# Hybrid: docs/KR_ALPHA_HYBRID_TRANSITION_RESULT.md (scenario B)
+kr_alpha_min_temp_exception:
+  active: true
+  approved_target_pct: 6.0
+  reason: "KR_ALPHA_HYBRID_TRANSITION_RESULT scenario B (2026-07-16)"
+  start_date: "2026-07-16"
+  review_trigger: >
+    When alpha_grade_forward_return.csv / hakedaka_forward_return_tracker.csv
+    have forward_return_60d~120d actually populated (not pending/blank).
+  review_window_provisional: "2026-Q4 (Oct–Dec 2026)"
+  review_choices:
+    - keep_6pct_with_renewed_exception
+    - permanently_lower_floor
+    - restore_standing_floor_20
+  lapse_if_unreviewed: >
+    If the review trigger is met and no explicit re-decision is recorded,
+    this exception LAPSES and the standing policy kr_alpha_min=20 is again
+    fully operative. The exception must not become the silent default.
 
 execution_levels:
   level_0: "No trade - data insufficient"

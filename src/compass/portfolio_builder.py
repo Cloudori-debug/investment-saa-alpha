@@ -10,6 +10,16 @@ from src.exposure.ar11_target_integrity import get_locked_tilt_groups, zero_tilt
 from src.models import VALID_ASSET_GROUPS
 
 
+def resolve_taa_tilt_scale(rules: dict[str, Any] | None) -> float:
+    """Return TAA tilt scale from compass_rules; missing key → 1.0 (legacy)."""
+    if not rules:
+        return 1.0
+    try:
+        return float((rules.get("tilt_governance") or {}).get("taa_tilt_scale", 1.0))
+    except (TypeError, ValueError):
+        return 1.0
+
+
 def _clamp_weights(weights: dict[str, float], bounds: dict[str, dict[str, float]]) -> dict[str, float]:
     clamped: dict[str, float] = {}
     for group, w in weights.items():
@@ -69,31 +79,36 @@ def build_portfolio_allocation(
     compass: CompassResult,
     profiles: dict[str, Any],
     profile_name: str | None = None,
+    *,
+    rules: dict[str, Any] | None = None,
+    tilt_meta: dict[str, Any] | None = None,
 ) -> PortfolioAllocation:
     name = resolve_profile_name(profiles, profile_name)
     saa = get_saa_weights(profiles, name)
     bounds = get_group_bounds(profiles, name)
-    regime_tilts = get_regime_tilts(profiles, compass.applied_regime)
-    phase_tilts = get_phase_tilts(profiles, compass.market_phase)
+    regime_tilts_raw = get_regime_tilts(profiles, compass.applied_regime)
+    phase_tilts_raw = get_phase_tilts(profiles, compass.market_phase)
     locked = get_locked_tilt_groups(profiles, name)
-    regime_tilts = zero_tilts_for_locked_groups(regime_tilts, locked)
-    phase_tilts = zero_tilts_for_locked_groups(phase_tilts, locked)
+    regime_tilts_raw = zero_tilts_for_locked_groups(regime_tilts_raw, locked)
+    phase_tilts_raw = zero_tilts_for_locked_groups(phase_tilts_raw, locked)
 
+    tilt_scale = resolve_taa_tilt_scale(rules)
     all_groups = sorted(VALID_ASSET_GROUPS)
+    scaled_phase = {g: float(phase_tilts_raw.get(g, 0.0)) * tilt_scale for g in all_groups}
+    scaled_regime = {g: float(regime_tilts_raw.get(g, 0.0)) * tilt_scale for g in all_groups}
+
     raw_effective: dict[str, float] = {}
     for group in all_groups:
         base = saa.get(group, 0.0)
-        p_tilt = phase_tilts.get(group, 0.0)
-        r_tilt = regime_tilts.get(group, 0.0)
-        raw_effective[group] = base + p_tilt + r_tilt
+        raw_effective[group] = base + scaled_phase[group] + scaled_regime[group]
 
     final, bound_notes = apply_bounds_iterative(raw_effective, bounds)
 
     group_rows: list[GroupAllocation] = []
     for group in all_groups:
         base = saa.get(group, 0.0)
-        p_tilt = phase_tilts.get(group, 0.0)
-        r_tilt = regime_tilts.get(group, 0.0)
+        p_tilt = scaled_phase[group]
+        r_tilt = scaled_regime[group]
         b = bounds.get(group, {"min": 0, "max": 100})
         group_rows.append(
             GroupAllocation(
@@ -112,6 +127,7 @@ def build_portfolio_allocation(
         f"SAA 프로필: {name}",
         f"적용 레짐 TAA: {compass.applied_regime.value}",
         f"시장 국면 보정: {compass.market_phase.value}",
+        f"TAA tilt scale: {tilt_scale}",
     ]
     if compass.override.active:
         notes.append(
@@ -119,6 +135,18 @@ def build_portfolio_allocation(
             + (f" ({compass.override.reason})" if compass.override.reason else "")
         )
     notes.extend(bound_notes)
+
+    if tilt_meta is not None:
+        tilt_meta.clear()
+        tilt_meta.update(
+            {
+                "taa_tilt_scale": tilt_scale,
+                "raw_phase_tilt": {g: round(float(phase_tilts_raw.get(g, 0.0)), 4) for g in all_groups},
+                "raw_regime_tilt": {g: round(float(regime_tilts_raw.get(g, 0.0)), 4) for g in all_groups},
+                "scaled_phase_tilt": {g: round(scaled_phase[g], 4) for g in all_groups},
+                "scaled_regime_tilt": {g: round(scaled_regime[g], 4) for g in all_groups},
+            }
+        )
 
     return PortfolioAllocation(
         profile=name,

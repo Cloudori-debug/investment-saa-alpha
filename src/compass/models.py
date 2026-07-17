@@ -77,8 +77,9 @@ class OverrideInfo(BaseModel):
 
 class CompassResult(BaseModel):
     date: str
-    market_phase: MarketPhase
+    market_phase: MarketPhase  # applied (hysteresis-confirmed) phase used for tilts
     phase_confidence: float = Field(ge=0, le=1)
+    computed_market_phase: MarketPhase | None = None  # raw same-day phase before hysteresis
     computed_regime: RiskRegime
     regime_confidence: float = Field(ge=0, le=1)
     compass_direction: CompassDirection
@@ -94,6 +95,7 @@ class CompassResult(BaseModel):
     override: OverrideInfo = Field(default_factory=OverrideInfo)
     data_gate: str = "GREEN"
     execution_level: int = 1
+    hysteresis_note: str | None = None
 
     @computed_field  # type: ignore[prop-decorator]
     @property

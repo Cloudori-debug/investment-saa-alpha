@@ -31,6 +31,7 @@
 | 레짐 만료·재검토 | `REGIME_OVERRIDE_EXPIRY_REVIEW_FIX_RESULT` — 만료 시 policy_cap↔computed 정합, AC-05c/AC-05 승격 |
 | 레짐 재분류 CAUTION | `REGIME_CAUTION_RECLASSIFICATION_RESULT` — YELLOW→CAUTION(수동) 원장 검증 완료(2026-07-14). fsr perms 정합, gap 3→2·escalation 리셋. scope 불변·ops target 자동 미반영. 다음 판단: AC-05b/05c 또는 ≤8/14 |
 | 익절·테제·비중 갭 점검 | `EXIT_WEIGHT_GAP_AUDIT_RESULT` — P0 확정 |
+| CECS AI 배치 승인 | 고정 Markdown 요청서·업로드 파서·`ai_suggested` 저장·종목별 출처 확인 게이트·개별/배치 승인·감사 저널 구현 |
 | 익절·테제 1차(가시성) | `EXIT_TAKEPROFIT_THESIS_RESULT` — assess_*+보드+빈 YAML. target 자동변경 없음. 목표가 기입·2차는 별도 승인 |
 | 목표가 워크시트 | `KR_ALPHA_EXIT_TARGET_WORKSHEET_RESULT` — 원장 검증 완료. yaml 목표치는 아래 「exit targets 기입」 |
 | exit targets 기입 | `kr_alpha_exit_targets.yaml` 7종(KT·코웨이·DB손보·동원·오리온·SNT·현대GF) 기계적 초안 반영(2026-07-15). 000660 의도적 미설정. assess_take_profit: 7종 targets_missing=False·전부 Hold/NONE. 보드 CSV는 **전체 분석 재실행** 후 UI 반영 |
@@ -42,9 +43,15 @@
 | 익절 목표 제안규칙 | `EXIT_TARGET_SUGGESTION_RULE_RESULT` — 워크시트 suggested_* (role+ROE). target_*/yaml 자동기입 없음 |
 | cleanup phase 0 | `CODEBASE_CLEANUP_PHASE_0_RESULT` — `alpha_v0_2` archive 완료·원장 검증 종결 (2026-07-15) |
 | cleanup phase 1 | `CODEBASE_CLEANUP_PHASE_1_RESULT` — value_list archive · 원장 라이브 검증 종결(2026-07-15 20:34 log / daily_report disabled 문구). **종결** |
-| cleanup phase 2 | `CODEBASE_CLEANUP_PHASE_2_RESULT` — alpha_v2·alpha_flow archive · `src.main` exit 0 · skip 로그 확인(2026-07-15). 원장 라이브 재확인 대기 |
+| cleanup phase 2 | `CODEBASE_CLEANUP_PHASE_2_RESULT` — alpha_v2·alpha_flow archive 원장 검증 종결(2026-07-15). 커밋 `548effa`. **종결** |
+| 경제 나침반 0·1 | `ECONOMIC_COMPASS_PHASE_0_1_RESULT` — 원장 검증 종결(2026-07-16). tilt×0.4 실증·히스테리시스는 override 없는 날 관찰 지속. **종결** |
 | target write 추적성 | `TARGET_WRITE_AUDIT_TRACEABILITY_FIX_RESULT` — 원장 검증 완료(2026-07-15). material=21·승인자 필수·writer_module·toast. 건 종결 |
 | 익절 목표상태 마커 | `EXIT_TARGET_STATUS_MARKER_RESULT` — 원장 검증 완료(2026-07-15). name 다음 ⚠️/✅·배너·target_* 공란. 건 종결 |
+| 정량+주간정성 재설계 | scoreboard=`alpha_scores`·proposal/ops 북 분리·CECS final 보호·`run_alpha_quant_snapshot`·주간 A~E 요청서/영역별 게이트·`WEEKLY_QUAL_REPORT_SPEC` (2026-07-17) |
+| 홈·수집·승인 단순화 | 홈=`자동 준비 2칸 + 지금 할 일 1건 + 제안 결과 + 접힌 운용`; 정량 전체 갱신 1클릭; 정성 1파일·승인판 1화면 (2026-07-17) |
+| 결재함 전용 UI | 메뉴=`홈·결재함·포트폴리오·저널`. CECS/T2/논지/저널 직접기입 제거. 수집→출처확인→영역별승인만 (`approval.py`, 2026-07-17) |
+| 편입 수·컷오프 연동 | 철학 정합 복원: **절대 cutoff 먼저 → 편입 수 5~8(기본 6)**. 6~30 상대순위 슬라이더는 설계 충돌로 철회. target 자동 변경 없음 (2026-07-18) |
+| 최종선정 갭보완 | 절대 cutoff → 섹터당≤2(`sector_group`) → 5~8. 목표가 없으면 대기후보·편입 차단(다음 주 E). B/E는 proposal만(CECS fallback 제거) (2026-07-18) |
 
 ### Alpha BT 라벨 — 검증 완료 (2026-07-14, 옵션 a 종료)
 
@@ -56,10 +63,13 @@
 ### 열린 항목 (짧게 · 우선순위)
 
 1. dry-run / policy_cap(~2026-09-24) / Actual Buy — 의도된 대기·운영자 판단
-2. CAUTION 재검토 — AC-05b(gap≥2 3일)·AC-05c(악화/회복) 또는 **≤2026-08-14**; kr_alpha TAA 20.66% vs ops 23.63%는 사람 승인 시에만 (자동 금지)
-3. **익절·테제 P0** — yaml 7종 초안 기입·로직 검증 완료(000660 제외). **전체 분석으로 `alpha_signal_board` 재생성** 필요(현재 CSV는 아직 targets_missing). 2차(실행 연동) 미승인. 임계값은 종목별 조정 가능
-4. (후순위) C 비중 — 고정비중 vs 연속 매핑 결정 후 `WEIGHT_HYSTERESIS_REBALANCE_SPEC` (가칭)
-5. (후순위) Alpha BT 옵션 b — PIT 재무 히스토리 · QVM-SR 유효성 검증
+2. CAUTION 재검토 — AC-05b/AC-05c 또는 **≤2026-08-14**; kr_alpha TAA vs ops는 사람 승인 시에만
+3. **경제 나침반** — (a) Turbulence 게이트 WAIT **25/60행**. (b) 방법 B 백테스트 완료(`METHOD_B_RESULT`) — excess DSR 비유의·MDD 개선만. 임계값 미변경
+4. **익절·테제 P0** — yaml 7종 초안·로직 검증 완료. 2차(실행 연동) 미승인
+5. **스크린→객관 6종 (정책 B)** — UI proposal_book = dry CLI 동일 경로(`select_eligible`+섹터 캡). 주간 정성 승인 후 운영. target 자동쓰기 금지
+6. **주간 정성 운영** — 금 요청서 → 주말 작성 → 월 영역별 승인. B/E=현재 proposal만. 목표가 대기후보는 다음 주 E까지 편입 차단
+7. ~~객관 고점수·섹터분산~~ — `max_names_per_sector=2` + shortfall 반영 완료 (2026-07-18)
+8. (후순위) Alpha BT 옵션 b — PIT 재무 히스토리 · QVM-SR 유효성 검증
 
 ---
 
@@ -145,7 +155,7 @@ overlap이 적을 수 있음 → 버그 아님 (유동성·시총·pillar 탈락
 | FASTJUSIK | 프로그램 | 상태 |
 |-----------|----------|------|
 | 당일 순매수/매도 | `investor_flows` / institutional flow | 부분 구현 |
-| 연속 수급 | streak (`flow_overlay` / flow_analytics) | saa-alpha에 `src/alpha_v2/flow_overlay.py` 등 존재 — pure_qvm·shadow 유지 확인 |
+| 연속 수급 | streak | `alpha_v2`/`alpha_flow`는 `archive/20260715_*`로 격리(2026-07-15). v1 `investor_flows`·신호보드 경로는 유지 |
 | 외국인 동반 | foreign+institution 부호 일치 | 확장/표시 |
 | 방향 전환 | 연속 후 반전 | 확장/표시 |
 | NPS 5% 보유 | DART 대량보유 | 선택 확장 |

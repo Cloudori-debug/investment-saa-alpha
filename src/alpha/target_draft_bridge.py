@@ -243,10 +243,12 @@ def merge_target_draft(
 
     if kr_alpha_budget is not None and kr_sum > kr_alpha_budget + 0.01:
         factor = kr_alpha_budget / kr_sum if kr_sum else 1.0
+        from src.alpha.target_bridge import scale_kr_alpha_row_to_budget
+
         for row in rows:
             if row.asset_group != "kr_alpha":
                 continue
-            row.target_weight = round(row.target_weight * factor, 2)
+            scale_kr_alpha_row_to_budget(row, factor)
         kr_sum = kr_alpha_target_sum(rows)
         warnings.append(f"kr_alpha 합계를 Compass 예산 {kr_alpha_budget:.1f}%에 맞게 {factor:.2%} 스케일")
 

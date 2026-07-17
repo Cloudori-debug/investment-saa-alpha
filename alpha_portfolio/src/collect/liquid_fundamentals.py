@@ -6,6 +6,7 @@ import pandas as pd
 
 from src.collect.dates import normalize_ticker
 from src.loaders import load_fundamentals, load_universe
+from src.sector_enrich import resolve_ticker_sector
 
 FUNDAMENTALS_COLUMNS = [
     "ticker",
@@ -74,7 +75,9 @@ def export_fundamentals_template(
         ticker = str(row["ticker"])
         meta = uni.loc[ticker] if not uni.empty and ticker in uni.index else None
         name = str(meta["name"]) if meta is not None and "name" in meta else ticker
-        sector = str(meta.get("sector", "") or "") if meta is not None else ""
+        uni_sector = str(meta.get("sector", "") or "") if meta is not None else ""
+        resolved = resolve_ticker_sector(ticker, name, uni_sector)
+        sector = str(resolved.get("sector") or "unknown")
         rows.append(
             {
                 "ticker": ticker,
@@ -151,7 +154,9 @@ def sync_liquid_fundamentals_stubs(
         ticker = str(row["ticker"])
         meta = uni.loc[ticker] if not uni.empty and ticker in uni.index else None
         name = str(meta["name"]) if meta is not None and "name" in meta else ticker
-        sector = str(meta.get("sector", "") or "unknown") if meta is not None else "unknown"
+        uni_sector = str(meta.get("sector", "") or "") if meta is not None else ""
+        resolved = resolve_ticker_sector(ticker, name, uni_sector)
+        sector = str(resolved.get("sector") or "unknown")
         per = pbr = ""
         if per_pbr_map and ticker in per_pbr_map:
             per = per_pbr_map[ticker].get("per", "")

@@ -24,6 +24,9 @@ def test_policy_cap_counterfactual_from_outputs() -> None:
 
     doc = build_policy_cap_counterfactual(DATA, OUT)
     scenarios = doc["scenarios"]
+    assert "policy_cap" in doc
+    assert "active" in doc["policy_cap"]
+    assert "cap_regime" in doc["policy_cap"]
     assert "current_policy" in scenarios
     assert "policy_cap_removed_only" in scenarios
     assert "all_soft_blockers_cleared" in scenarios

@@ -27,14 +27,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.apply:
             proposal = build_proposal_from_draft(args.data_dir, args.output_dir, draft_path=args.draft)
-            apply_proposed_target(
+            result = apply_proposed_target(
                 proposal,
                 args.data_dir / "target_portfolio.csv",
                 backup_dir=args.data_dir / "backups",
                 approved_by=args.approved_by,
+                writer_module="scripts.apply_target_draft",
             )
-            print(f"Applied: kr_alpha sum={proposal.kr_alpha_sum:.2f}% changes={len(proposal.changes)}")
-        else:
+            n = int((result.audit or {}).get("write_material_change_count") or 0)
+            print(
+                f"Applied: kr_alpha sum={proposal.kr_alpha_sum:.2f}% "
+                f"changes={len(proposal.changes)} material={n} "
+                f"writer={result.audit.get('writer_module')}"
+            )        else:
             proposal = preview_target_draft(args.data_dir, args.output_dir, draft_path=args.draft)
             print(f"Preview: kr_alpha sum={proposal.kr_alpha_sum:.2f}% changes={len(proposal.changes)}")
             for w in proposal.warnings:

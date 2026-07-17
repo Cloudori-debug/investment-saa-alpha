@@ -29,7 +29,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         write_alpha_backtest_outputs(result, args.output_dir)
         print(
-            f"Alpha BT: dates={len(result.dates)} quality={result.sample_quality} "
+            f"Alpha BT: scored_days={len(result.scored_dates)} "
+            f"price_history_days={len(result.dates)} quality={result.sample_quality} "
             f"top{result.top_n}_gross_excess={result.top_n_excess:.2%} "
             f"net_excess={result.top_n_excess_net:.2%} monotonic={result.monotonic}"
         )

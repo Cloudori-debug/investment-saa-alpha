@@ -11,6 +11,156 @@ STATUS_ICON = {"pass": "✅", "warn": "⚠️", "fail": "❌"}
 from src.ui.pillar_display import render_pillar_tabs
 
 
+def stair_band_label(signal_strength: float | None, *, targets_missing: bool = False) -> str:
+    """Display-only stair band text from existing resolve_partial_frac_from_strength."""
+    if targets_missing:
+        return "목표 미설정 — Hold"
+    if signal_strength is None or (isinstance(signal_strength, float) and pd.isna(signal_strength)):
+        return "—"
+    from src.alpha.take_profit_thesis import resolve_partial_frac_from_strength
+
+    s = float(signal_strength)
+    frac = resolve_partial_frac_from_strength(s)
+    if frac <= 0:
+        return "70 미만 (—)"
+    if frac <= 0.10 + 1e-9:
+        return "70-80 (10%)"
+    if frac <= 0.20 + 1e-9:
+        return "80-90 (20%)"
+    return "90+ (30%)"
+
+
+def prepare_take_profit_board_view(board: pd.DataFrame) -> pd.DataFrame:
+    """Build read-only display frame for take-profit signal strength (no new calc)."""
+    if board is None or board.empty:
+        return pd.DataFrame()
+    from src.alpha.exit_target_worksheet import exit_target_status_label
+    from src.alpha.take_profit_thesis import format_proximity_display
+
+    df = board.copy()
+    for col in ("tp_signal_strength", "exit_leg", "trim_source_tag", "targets_missing",
+                "momentum_override_applied", "tp_rationale", "tp_partial_frac",
+                "fund_proximity_pct", "val_proximity_pct"):
+        if col not in df.columns:
+            df[col] = "" if col not in {"targets_missing", "momentum_override_applied"} else False
+
+    def _missing(v) -> bool:
+        if isinstance(v, bool):
+            return v
+        return str(v).strip().lower() in {"true", "1", "yes"}
+
+    def _opt_float(v) -> float | None:
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return None
+        s = str(v).strip()
+        if s == "" or s.lower() in {"nan", "none", "—", "-"}:
+            return None
+        try:
+            return float(s)
+        except (TypeError, ValueError):
+            return None
+
+    strength_display: list[str] = []
+    band_labels: list[str] = []
+    status_labels: list[str] = []
+    prox_labels: list[str] = []
+    for _, row in df.iterrows():
+        missing = _missing(row.get("targets_missing"))
+        status_labels.append(exit_target_status_label(has_existing_target=not missing))
+        leg = str(row.get("exit_leg") or "NONE")
+        prox_labels.append(
+            format_proximity_display(
+                _opt_float(row.get("fund_proximity_pct")),
+                _opt_float(row.get("val_proximity_pct")),
+                targets_missing=missing,
+                exit_leg=leg,
+            )
+        )
+        if missing:
+            strength_display.append("목표 미설정")
+            band_labels.append(stair_band_label(None, targets_missing=True))
+            continue
+        raw = row.get("tp_signal_strength")
+        try:
+            s = float(raw) if raw is not None and str(raw).strip() != "" else None
+        except (TypeError, ValueError):
+            s = None
+        strength_display.append("—" if s is None else f"{s:.1f}")
+        band_labels.append(stair_band_label(s, targets_missing=False))
+
+    out = pd.DataFrame(
+        {
+            "ticker": df.get("ticker", ""),
+            "name": df.get("name", ""),
+            "목표상태": status_labels,
+            "신호강도": strength_display,
+            "계단구간": band_labels,
+            "근접도": prox_labels,
+            "exit_leg": df.get("exit_leg", ""),
+            "모멘텀오버라이드": df.get("momentum_override_applied", ""),
+            "trim_source_tag": df.get("trim_source_tag", ""),
+            "tp_rationale": df.get("tp_rationale", ""),
+        }
+    )
+    return out
+
+
+def render_take_profit_signals(
+    output_dir: Path,
+    *,
+    widget_key: str = "alpha_take_profit_signals",
+) -> None:
+    """Read-only stair-step take-profit board (no trade / target buttons)."""
+    from src.alpha.exit_target_worksheet import STATUS_MISSING
+
+    st.subheader("익절 신호강도 (읽기 전용)")
+    st.caption(
+        "출처: `alpha_signal_board.csv` — 신호강도·계단구간은 표시만. "
+        "매매·target 변경 버튼 없음 (읽기 전용)."
+    )
+    st.caption(
+        "FUND = 펀더멘털 조건(ROE·배당성향·자사주소각) — yaml에 정의한 조건 전부 만족해야 도달  \n"
+        "VAL = 밸류에이션 조건(PBR 등) — 정의한 조건 중 하나만 넘어도 도달  \n"
+        "근접도 = 현재값이 목표값의 몇 %까지 왔는지(거리 측정값, 예측·확률 아님). 100%면 도달  \n"
+        "신호강도 = 도달한 뒤에만 계산되는 값(0~100) — 근접도와 다른 계산식, 계단식 부분익절 비율(10/20/30%)을 결정  \n"
+        "exit_leg = 어느 조건이 도달했는지: NONE(둘 다 미도달) / FUND / VAL / BOTH  \n"
+        "trim_source_tag \"trim:score\"는 이 익절엔진과 무관 — 기존 스코어 기반 보유 리뷰 태그. "
+        "실제 트림 검토 여부는 action_state 확인  \n"
+        "FUND만 설정된 종목 = 실적 개선만 기준(가격 상한 없음). "
+        "VAL만 설정된 종목 = 가격 상한만 기준(실적 개선 기대 없음). "
+        "둘 다 설정 = 먼저 도달하는 쪽이 트리거"
+    )
+    board = load_output_csv(output_dir, "alpha_signal_board.csv", dtype=str)
+    if board is None or board.empty:
+        st.caption("`alpha_signal_board.csv` 없음 — 전체 분석 후 생성됩니다.")
+        return
+    view = prepare_take_profit_board_view(board)
+    if view.empty:
+        st.caption("표시할 행 없음")
+        return
+    missing_n = int((view["목표상태"].astype(str) == STATUS_MISSING).sum()) if "목표상태" in view.columns else 0
+    if missing_n > 0:
+        st.warning(
+            f"⚠️ {missing_n}/{len(view)} 종목 목표 미설정 — "
+            f"`data/kr_alpha_exit_targets.yaml`에서 직접 입력"
+        )
+    show_cols = [c for c in view.columns if c != "tp_rationale"]
+    from src.ui.table_display import alpha_list_table_height, show_dataframe_readable
+
+    show_dataframe_readable(
+        view[show_cols],
+        height=alpha_list_table_height(len(view)),
+        key=widget_key,
+    )
+    with st.expander("근거 (tp_rationale)", expanded=False):
+        rat = view[["ticker", "name", "tp_rationale"]].copy()
+        show_dataframe_readable(
+            rat,
+            height=min(280, alpha_list_table_height(len(rat))),
+            key=f"{widget_key}_rationale",
+        )
+
+
 def _render_checklist(
     data_dir: Path,
     output_dir: Path,
@@ -396,6 +546,7 @@ def render_alpha_page(data_dir: Path, output_dir: Path, *, focus: str | None = N
             st.dataframe(holdings, use_container_width=True, height=320)
         else:
             st.caption("kr_alpha 보유 리뷰 없음")
+        render_take_profit_signals(output_dir, widget_key="alpha_take_profit_signals")
         _render_checklist(data_dir, output_dir, gpt_ctx, candidates, holdings)
 
     elif active_key == "target":

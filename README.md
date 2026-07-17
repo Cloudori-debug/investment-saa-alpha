@@ -14,13 +14,13 @@
 | **자산군 Gap** | `portfolio_gap.csv` — Buy/Hold/Trim/Park/NoTrade |
 | **종목 실행** | 트리거 기반 Buy/Wait/Trim (`trade_actions.csv`) |
 | **백테스트** | 히스토리 CSV로 레짐·배분 전환 검증 |
-| **Streamlit UI** | 운용 콘솔 (`app.py`) |
+| **Streamlit UI** | SAA 운용 콘솔 (`app.py`) · **알파 시스템 대시보드** (`alpha_dashboard.py`) |
 
 ## 빠른 시작 (더블클릭 — CMD 불필요)
 
 ```
 1. 설치.bat          ← 최초 1회
-2. 투자나침반.bat    ← [1] UI 실행 → 브라우저에서 전부 운용
+2. 투자나침반.bat    ← [1] UI 실행 → **알파 시스템 대시보드** (모바일 우선)
 ```
 
 | bat | 용도 |
@@ -29,13 +29,21 @@
 | `설치.bat` | 패키지 설치 |
 | `UI실행.bat` 등 | (선택) CLI·고급 사용자용 |
 
-상세: **[사용설명서](docs/USER_GUIDE.md)**
+상세: **[사용설명서](docs/USER_GUIDE.md)** · 채팅 승계: **[레거시 핸드오프](docs/CHAT_HANDOFF_LEGACY_MULTI_ASSET.md)** · **[AGENTS.md](AGENTS.md)**
 
-### (선택) 터미널
+### 알파 시스템 대시보드 (모바일 우선)
 
 ```powershell
-cd investment-saa-alpha
-pip install -e ".[dev,ui,data]"
+streamlit run alpha_dashboard.py --server.address 0.0.0.0
+```
+
+- 같은 Wi-Fi 폰: `http://<PC-IP>:8501`
+- **외부 인터넷 포트 노출 금지** (LAN 전용)
+- 가이드: **[ALPHA_DASHBOARD_UI_GUIDE.md](docs/ALPHA_DASHBOARD_UI_GUIDE.md)**
+
+### (선택) 레거시 SAA 나침반 UI
+
+```powershell
 streamlit run app.py
 ```
 

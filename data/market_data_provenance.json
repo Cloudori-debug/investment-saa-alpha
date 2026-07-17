@@ -1,19 +1,19 @@
 {
   "schema_version": "2.0",
-  "as_of": "2026-07-10",
-  "updated_at": "2026-07-11T00:11:21",
+  "as_of": "2026-07-16",
+  "updated_at": "2026-07-16T18:02:47",
   "fields": {
     "sp500": {
       "field": "sp500",
-      "value": 7543.6802,
-      "value_date": "2026-07-10",
-      "updated_at": "2026-07-11T00:11:21",
+      "value": 7572.3999,
+      "value_date": "2026-07-15",
+      "updated_at": "2026-07-16T18:02:47",
       "source": "yahoo_chart",
       "source_file": "data/market_data_provenance.json",
       "fetch_method": "yahoo_chart",
-      "stale_reference_date": "2026-07-10",
-      "stale_days": 0,
-      "stale_business_days": 0,
+      "stale_reference_date": "2026-07-15",
+      "stale_days": 1,
+      "stale_business_days": 1,
       "threshold_days": 3,
       "status": "fresh",
       "market_calendar": "US_EQUITY",
@@ -25,17 +25,17 @@
       "symbol": "^GSPC",
       "confidence": "medium",
       "fallback_used": false,
-      "fetched_at": "2026-07-11T00:11:21"
+      "fetched_at": "2026-07-16T18:02:47"
     },
     "vix": {
       "field": "vix",
-      "value": 15.71,
-      "value_date": "2026-07-10",
-      "updated_at": "2026-07-11T00:11:21",
+      "value": 15.84,
+      "value_date": "2026-07-16",
+      "updated_at": "2026-07-16T18:02:47",
       "source": "yahoo_chart",
       "source_file": "data/market_data_provenance.json",
       "fetch_method": "yahoo_chart",
-      "stale_reference_date": "2026-07-10",
+      "stale_reference_date": "2026-07-16",
       "stale_days": 0,
       "stale_business_days": 0,
       "threshold_days": 3,
@@ -49,17 +49,17 @@
       "symbol": "^VIX",
       "confidence": "medium",
       "fallback_used": false,
-      "fetched_at": "2026-07-11T00:11:21"
+      "fetched_at": "2026-07-16T18:02:47"
     },
     "gold": {
       "field": "gold",
-      "value": 4105.7998,
-      "value_date": "2026-07-10",
-      "updated_at": "2026-07-11T00:11:21",
+      "value": 4040.2,
+      "value_date": "2026-07-16",
+      "updated_at": "2026-07-16T18:02:47",
       "source": "yahoo_chart",
       "source_file": "data/market_data_provenance.json",
       "fetch_method": "yahoo_chart",
-      "stale_reference_date": "2026-07-10",
+      "stale_reference_date": "2026-07-16",
       "stale_days": 0,
       "stale_business_days": 0,
       "threshold_days": 2,
@@ -73,17 +73,17 @@
       "symbol": "GC=F",
       "confidence": "medium",
       "fallback_used": false,
-      "fetched_at": "2026-07-11T00:11:21"
+      "fetched_at": "2026-07-16T18:02:47"
     },
     "oil_brent": {
       "field": "oil_brent",
-      "value": 76.34,
-      "value_date": "2026-07-10",
-      "updated_at": "2026-07-11T00:11:21",
+      "value": 84.64,
+      "value_date": "2026-07-16",
+      "updated_at": "2026-07-16T18:02:47",
       "source": "yahoo_chart",
       "source_file": "data/market_data_provenance.json",
       "fetch_method": "yahoo_chart",
-      "stale_reference_date": "2026-07-10",
+      "stale_reference_date": "2026-07-16",
       "stale_days": 0,
       "stale_business_days": 0,
       "threshold_days": 2,
@@ -97,17 +97,17 @@
       "symbol": "BZ=F",
       "confidence": "medium",
       "fallback_used": false,
-      "fetched_at": "2026-07-11T00:11:21"
+      "fetched_at": "2026-07-16T18:02:47"
     },
     "usdkrw": {
       "field": "usdkrw",
-      "value": 1501.67,
-      "value_date": "2026-07-10",
-      "updated_at": "2026-07-11T00:11:21",
+      "value": 1479.48,
+      "value_date": "2026-07-16",
+      "updated_at": "2026-07-16T18:02:47",
       "source": "unknown",
       "source_file": "data/market_data_provenance.json",
       "fetch_method": "fallback",
-      "stale_reference_date": "2026-07-10",
+      "stale_reference_date": "2026-07-16",
       "stale_days": 0,
       "stale_business_days": 0,
       "threshold_days": 2,
@@ -121,7 +121,7 @@
       "symbol": "",
       "confidence": "low",
       "fallback_used": true,
-      "fetched_at": "2026-07-11T00:11:21"
+      "fetched_at": "2026-07-16T18:02:47"
     }
   }
 }

@@ -367,11 +367,25 @@ def build_policy_cap_counterfactual(data_dir: Path, output_dir: Path) -> dict[st
     if not recommended:
         recommended.append("Monitor gates; counterfactual paths remain blocked")
 
+    # Top-level policy_cap required by diagnostics_cache.verify_diagnostics_outputs
+    policy_cap_summary = {
+        "active": bool(policy_cap.get("active")),
+        "cap_regime": policy_cap.get("cap_regime"),
+        "cap_source": policy_cap.get("cap_source"),
+        "max_execution_scope": policy_cap.get("max_execution_scope")
+        or policy_cap.get("capped_execution_scope"),
+        "technical_execution_scope": policy_cap.get("technical_execution_scope"),
+        "expiry_status": policy_cap.get("expiry_status"),
+        "regime_expires_date": policy_cap.get("regime_expires_date"),
+        "days_to_expiry": policy_cap.get("days_to_expiry"),
+    }
+
     return {
         "schema_version": "1.0",
         "disclaimer": DISCLAIMER,
         "as_of": final_doc.get("as_of") or acceptance.get("as_of"),
         "run_id": final_doc.get("run_id") or acceptance.get("run_id"),
+        "policy_cap": policy_cap_summary,
         "actual_state": {
             "actual_buy_allowed": actual_buy,
             "policy_cap_active": base["policy_cap_active"],

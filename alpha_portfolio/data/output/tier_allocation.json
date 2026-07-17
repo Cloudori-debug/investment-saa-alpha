@@ -1,58 +1,75 @@
 {
-  "000660": {
-    "name": "SK하이닉스",
-    "tier": "SATELLITE",
-    "cecs": 42.5,
-    "factor_score_total": 67.27,
-    "composite_score": 67.27,
-    "weight": 0.1491
-  },
   "006040": {
     "name": "동원산업",
     "tier": "SATELLITE",
     "cecs": 42.5,
-    "factor_score_total": 67.14,
-    "composite_score": 67.14,
-    "weight": 0.1488
-  },
-  "036530": {
-    "name": "SNT홀딩스",
-    "tier": "SATELLITE",
-    "cecs": 42.5,
-    "factor_score_total": 66.41,
-    "composite_score": 66.41,
-    "weight": 0.1471
+    "factor_score_total": 67.72,
+    "composite_score": 67.72,
+    "weight": 0.1529,
+    "excluded_from_allocation": false
   },
   "271560": {
     "name": "오리온",
     "tier": "SATELLITE",
     "cecs": 42.5,
-    "factor_score_total": 64.12,
-    "composite_score": 64.12,
-    "weight": 0.1421
+    "factor_score_total": 64.05,
+    "composite_score": 64.05,
+    "weight": 0.1446,
+    "excluded_from_allocation": false
   },
   "005830": {
     "name": "DB손해보험",
     "tier": "SATELLITE",
     "cecs": 42.5,
-    "factor_score_total": 62.52,
-    "composite_score": 62.52,
-    "weight": 0.1385
+    "factor_score_total": 63.14,
+    "composite_score": 63.14,
+    "weight": 0.1426,
+    "excluded_from_allocation": false
   },
-  "069960": {
-    "name": "현대백화점",
+  "086790": {
+    "name": "하나금융지주",
     "tier": "SATELLITE",
     "cecs": 42.5,
-    "factor_score_total": 62.18,
-    "composite_score": 62.18,
-    "weight": 0.1378
+    "factor_score_total": 62.13,
+    "composite_score": 62.13,
+    "weight": 0.1403,
+    "excluded_from_allocation": false
+  },
+  "078930": {
+    "name": "GS",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 62.09,
+    "composite_score": 62.09,
+    "weight": 0.1402,
+    "excluded_from_allocation": false
+  },
+  "021240": {
+    "name": "코웨이",
+    "tier": "SATELLITE",
+    "cecs": 42.5,
+    "factor_score_total": 61.93,
+    "composite_score": 61.93,
+    "weight": 0.1398,
+    "excluded_from_allocation": false
   },
   "005440": {
     "name": "현대지에프홀딩스",
     "tier": "SATELLITE",
     "cecs": 42.5,
-    "factor_score_total": 61.68,
-    "composite_score": 61.68,
-    "weight": 0.1367
+    "factor_score_total": 61.86,
+    "composite_score": 61.86,
+    "weight": 0.1397,
+    "excluded_from_allocation": false
+  },
+  "_meta": {
+    "allocation_weight_sum": 1.0001,
+    "unallocated_weight": 0.0,
+    "allocation_complete": true,
+    "warnings": [
+      "정책 지연 방어력 부족: CORE+NEAR 합산 비중이 65% 미만입니다.",
+      "HEDGE 티어 종목이 0개입니다 — 하방 방어 슬롯 검토 권장",
+      "SATELLITE 합산 100.0% — 목표 상한(20%) 대비 높음"
+    ]
   }
 }

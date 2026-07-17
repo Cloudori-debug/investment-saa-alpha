@@ -31,5 +31,9 @@
 | `decision_log.jsonl` | `run_id=2026-07-15T20:52:52+09:00` — `alpha_v2_shadow_skipped`/`flow_dashboard_skipped`(`module_unavailable`)→`bundle_reconciliation` |
 | `daily_report.md` | Alpha v2 / 수급 섹션 헤더 + `ENABLE_ALPHA_V2=False / archived` 문구 |
 
-**종결 대기:** 원장 라이브 확인(decision_log·daily_report) 후 2단계 종결. 커밋: `cleanup: archive alpha_v2 / alpha_flow (phase 2)`.
+**종결 (2026-07-15):** 원장 독립 검증 완료 — archive 개수·커밋 `548effa`·게이트 패턴·decision_log·daily_report disabled 문구 일치. **2단계 종료.**
+
+**원장 보완 메모 (비차단):**
+- `daily_report.md` ~428행 근처 `Alpha v2 shadow history updated: yes` — disabled 상태와 어긋날 수 있는 잔여 문구. 사소·후순위 청소.
+- pytest 미확인 2건 원장 조사: `test_run_mode_contract_pass_if_present`는 현재 `run_mode_contract_validation.json`(contract_pass=true, pykrx=0)로 통과 예상(당시 stale 가능); `test_refresh_preserves_on_api_failure`는 tier2 FRED/KOSIS로 alpha_v2/flow와 무관·`external_data_dependency` 선재 부채. **phase 2 회귀 아님** — 전체 18건 재실행 불필요.
 

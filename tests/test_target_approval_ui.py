@@ -15,6 +15,10 @@ def test_target_apply_lives_in_shared_module() -> None:
     assert "apply_proposed_target" in src
     assert "승인 반영" in src
     assert "전체 분석 자동 실행" in src
+    assert 'writer_module="ui.target_approval_actions"' in src
+    assert "disabled=not bool(approver)" in src
+    assert 'approver or "human"' not in src
+    assert "write_material_change_count" in src
 
 
 def test_post_target_approval_analysis_helper() -> None:
@@ -56,6 +60,7 @@ def test_apply_target_draft_cli_uses_bridge() -> None:
     src = _read("scripts/apply_target_draft.py")
     assert "apply_proposed_target" in src
     assert "고급/관리자" in src or "관리자" in src
+    assert 'writer_module="scripts.apply_target_draft"' in src
 
 
 def test_apply_proposed_target_still_uses_write_audit() -> None:

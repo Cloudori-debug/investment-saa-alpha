@@ -117,6 +117,30 @@ def _content_hash(rows: list[dict[str, str]]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def count_material_weight_changes(
+    before_rows: list[dict[str, str]] | list[Any],
+    after_rows: list[dict[str, str]] | list[Any],
+) -> int:
+    """Count tickers whose rounded target_weight differs (same basis as _content_hash)."""
+
+    def _map(rows: list[Any]) -> dict[str, float]:
+        out: dict[str, float] = {}
+        for r in rows:
+            if hasattr(r, "ticker"):
+                tk = _normalize_ticker(getattr(r, "ticker", ""))
+                w = round(float(getattr(r, "target_weight", 0) or 0), 4)
+            else:
+                tk = _normalize_ticker((r or {}).get("ticker", ""))
+                w = round(_row_weight(r or {}), 4)
+            if tk:
+                out[tk] = w
+        return out
+
+    before = _map(before_rows)
+    after = _map(after_rows)
+    return sum(1 for t in set(before) | set(after) if before.get(t) != after.get(t))
+
+
 def _load_guard(data_dir: Path) -> dict[str, Any]:
     path = guard_state_path(data_dir)
     if not path.exists():

@@ -1,0 +1,132 @@
+version: '0.1'
+defaults:
+  momentum_override_threshold: 70
+  exit_partial_frac_bands:
+  - min_strength: 70
+    max_strength: 80
+    partial_frac: 0.1
+  - min_strength: 80
+    max_strength: 90
+    partial_frac: 0.2
+  - min_strength: 90
+    max_strength: 100
+    partial_frac: 0.3
+tickers:
+  '030200':
+    thesis_id: kt_quality_dividend
+    valuation:
+      pbr_max: 0.86
+  '021240':
+    thesis_id: coway_quality_defensive
+    valuation:
+      pbr_max: 2.27
+    target_price: 150000.0
+    rationale: '확인 불가(pbr_max); 검색 키워드: 코웨이(021240) 목표 PBR 배수 증권사 리포트 2026; 목표 PBR
+      배수 명시 리포트는 검색되지 않음(현재 PBR 참고치 1.66배). target_price(150,000원)는 한화투자증권, 2026.7.15
+      최신 리포트(BUY 유지) 기준. ※ 검색 중 발견된 ''69,000원'' 목표가는 발행 시점 불명확 + 현재가(95,400원, 2026.7.3
+      기준)보다도 낮아 과거 자료로 판단해 채택하지 않음. 목표가 대비 현재가 기준 약 57% 상승여력 계산되나 단일 증권사 기준이라 교차확인
+      필요. 거버넌스(소수주주 보호 미흡) 이슈 지속은 목표가 달성의 비계량 리스크.'
+    fundamental_reason: 렌탈계정 순증 사상 최대 전망(2분기 23만개 추정), 말레이시아·태국 등 동남아 성장 지속, 2026년
+      영업이익 1조원 근접(컨센서스 9,987억원) 및 연매출 5조원 목표 순항.
+    sources:
+    - '[한화證, 코웨이 렌탈계정 순증 사상 최대 전망…목표가 15만원 유지 - 아주경제](https://www.ajunews.com/view/20260715075851333)'
+    approved_by: operator
+    approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved
+  005830:
+    thesis_id: db_insurance_shareholder_return
+    valuation:
+      pbr_max: 1.4
+    target_price: 218000.0
+    rationale: target_price 218,000원은 4개 증권사 목표가(메리츠 200,000 / KB증권 210,000[Hold]
+      / NH투자증권 213,000 / 대신증권 250,000)의 단순평균을 반올림한 수치이며 단일 컨센서스가 아님에 유의 — 증권사별 편차가
+      큼(200,000~250,000원). KB증권은 목표가를 40% 상향하면서도 투자의견은 'Hold'로 하향한 이례적 케이스. 자동차보험
+      손해율 악화(85%, +4%p) 및 소송리스크(약 3,451억원)는 목표가 하방 요인.
+    fundamental_reason: 2025년 ROE 17.7%, 현재 PBR 0.72배 대비 목표 PBR 1.4배(대신증권, 2026년 예상
+      BPS에 ROE 반영해 산정)로 약 2배 확장 여력을 제시. 위험손해율 개선과 예실차손실 축소 등 언더라이팅 경쟁력이 어려운 업황에서도
+      입증된 점이 공통 근거.
+    sources:
+    - '[DB손해보험, 목표가 25만원 - 대신증권/kiwoom](https://bbn.kiwoom.com/rfCR11951)'
+    - '[DB손해보험 주가전망 목표주가 - KB증권/kbthink](https://kbthink.com/securities-view.html?docId=20260219100209963K)'
+    approved_by: operator
+    approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved
+  '006040':
+    thesis_id: dongwon_dividend_value
+    fundamental:
+      roe_min: 13.5
+    valuation:
+      pbr_max: 0.65
+    target_price: 48000.0
+    rationale: '확인 불가(pbr_max); 검색 키워드: 동원산업(006040) 목표 PBR 배수 증권사 리포트 2026; 해당 리포트는
+      목표 PBR 배수가 아닌 NAV 할인율 방식(목표 할인율 50%, 현재 PBR 참고치 0.4배)을 사용해 pbr_max는 직접 확인 안됨.
+      target_price(48,000원)는 흥국증권, 2026.5.12 발표 확인됨 — 직전 목표가 67,000원에서 28% 하향 조정된
+      점에 유의. 자사주 22.5% 완전소각이라는 강한 밸류업 실행에도 불구, HMM 인수설이라는 자본배분 불확실성이 할인율을 오히려 확대시킨
+      사례로 밸류업 실행력과 목표주가가 반대로 움직인 점을 반드시 본인 확인 요망.'
+    fundamental_reason: 흥국증권은 주당순자산가치(NAV) 96,762원을 산정하고 NAV 대비 할인율 50%를 적용해 목표주가
+      48,000원을 제시. 식품·건설·패키징 자회사 실적은 개선되었으나 HMM 인수 가능성에 대한 시장 우려가 할인율 확대 요인으로 작용.
+    sources:
+    - '[동원산업, HMM 부담 못 털어…목표가는 하향 - 흥국/이데일리](https://marketin.edaily.co.kr/News/ReadE?newsId=03250486645448264)'
+    approved_by: operator
+    approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved
+  '271560':
+    thesis_id: orion_quality_defensive
+    fundamental:
+      roe_min: 12.5
+    valuation:
+      pbr_max: 1.6
+    target_price: 200000.0
+    rationale: '확인 불가(pbr_max); 검색 키워드: 오리온(271560) 목표 PBR 배수 증권사 리포트 2026; 목표 PBR
+      배수를 명시한 리포트는 검색되지 않고 목표주가만 확인됨. target_price(200,000원)는 하나증권, 2026.4.22 최신 리포트
+      기준 — 직전 2025.11.12 155,000원, 한국투자증권 150,000원 대비 대폭 상향. 5개월 사이 29% 상향된 점은 추세적
+      개선을 반영하나 단기 급상향인 만큼 실적 서프라이즈 지속 여부에 유의. 국내 매출 성장률(4.0%)은 해외(베트남 5.3%, 러시아 20.0%)
+      대비 낮아 해외 의존도가 목표가 달성의 핵심 변수.'
+    fundamental_reason: 카카오 투입원가 부담이 1Q26부터 유의미하게 경감(카카오 가격 톤당 1만불→6천불), 중국 정부 부양책
+      기반 회복. 2026년 국가별 톱라인 성장률을 한국 4.0% / 중국 5.0% / 베트남 5.3% / 러시아 20.0%로 추정하며 연결손익
+      YoY +10.7% 전망.
+    sources:
+    - '[오리온, 2026년 오리온의 시간 목표가 200,000원 - 하나증권/네이트](https://news.nate.com/view/20260422n05383)'
+    approved_by: operator
+    approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved
+  '036530':
+    thesis_id: snt_holdings_shareholder_return
+    fundamental:
+      roe_min: 12.0
+    valuation:
+      pbr_max: 0.72
+    target_price: 69600.0
+    rationale: '확인 불가(목표 PBR/목표주가); 검색 키워드: SNT홀딩스(036530) 목표주가 증권사 리포트 2026; 증권사의
+      명시적 목표 PBR 배수·목표주가 리포트가 검색되지 않아(SNT에너지·SNT모티브 등 자회사 리포트는 존재하나 지주사인 SNT홀딩스 자체
+      커버리지 없음), pbr_max 칸에는 부득이 2026.5.1 기준 현재 거래 PBR(0.72배, 주가 62,100원, 52주 32,500~89,000원)을
+      참고치로 입력함 — 이는 애널리스트 목표배수가 아니라 현재가 기준 실측치이므로 목표가로 오인하지 말 것. 지주사할인 축소는 ''소각 검토''가
+      ''소각 확정·실행''으로 전환되어야 실현되는 조건부 시나리오.'
+    fundamental_reason: 현재 PBR 0.72~0.74배로 5년 평균 PBR 0.34배 대비는 이미 레벨업된 상태이나 ROE 10.27%에
+      비해 여전히 저평가. 자사주 소각 실행이 공식화될 경우 지주사할인(conglomerate discount) 축소를 통한 리레이팅 여력이
+      있다는 시장 평가 존재.
+    sources:
+    - '[SNT홀딩스, PBR 0.72배 - 인베스팅닷컴](https://www.investing.com/equities/s-t-holdings)'
+    - '[SNT홀딩스 재무제표 - 한국경제](https://markets.hankyung.com/stock/036530/financial-summary)'
+    approved_by: operator
+    approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved
+  '005440':
+    thesis_id: hyundai_gf_value_rerating
+    fundamental:
+      roe_min: 12.5
+    valuation:
+      pbr_max: 0.7
+    target_price: 20000.0
+    rationale: pbr_max 0.7배는 2028년까지의 장기 목표로, 단기(2026년 내) 달성을 전제한 수치가 아님에 유의. target_price는
+      SK증권 20,000원(18,000원에서 상향)을 채택했으며 IBK투자증권은 19,000원을 제시해 큰 편차는 없음. 현대홈쇼핑 완전자회사
+      편입에 따른 지배구조 단순화가 재평가의 실질적 트리거이나 편입 완료(7.20 상장폐지) 이후 시장 반응은 아직 확인되지 않은 상태.
+    fundamental_reason: 지분투자수익률 4%↑ 목표를 조기 달성하며 PBR 0.7배(2028년 목표, 장기 목표는 1배)를 제시.
+      2026.5.31 기준 현재 PBR 0.49배 대비 0.7배 도달 시 시가총액 약 2.8조원이 필요해(당시 시총 2.14조원 대비 +22%
+      상승 여력) 목표가 20,000원과 정합성이 있음.
+    sources:
+    - '[''시장심리''에 승부수… 현대지에프홀딩스, PBR 0.7배 돌파할까 - 블로터](https://www.bloter.net/news/articleView.html?idxno=661888)'
+    - '[현대지에프홀딩스, 백화점에 웃는다 목표가 20,000원 - SK증권/뉴스핌](https://www.newspim.com/news/view/20260626000129)'
+    approved_by: operator
+    approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved

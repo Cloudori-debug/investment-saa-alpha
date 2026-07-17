@@ -536,7 +536,7 @@ def _check_portfolio_inputs(data_dir: Path, output_dir: Path | None = None) -> l
     return checks
 
 
-def _check_outputs(output_dir: Path) -> list[HealthCheck]:
+def _check_outputs(data_dir: Path, output_dir: Path) -> list[HealthCheck]:
     checks: list[HealthCheck] = []
     for name in EXPECTED_OUTPUT_FILES:
         path = output_dir / name
@@ -549,16 +549,33 @@ def _check_outputs(output_dir: Path) -> list[HealthCheck]:
 
     regime_path = output_dir / "compass_regime.json"
     if regime_path.exists():
+        from src.validation.regime_override_divergence import assess_regime_divergence_from_outputs
+
         data = json.loads(regime_path.read_text(encoding="utf-8"))
+        override = data.get("override") or {}
+        assessment = assess_regime_divergence_from_outputs(data_dir, output_dir)
+        if assessment is None:
+            status = "fail"
+            message = f"산출={data.get('computed_regime')} 적용={data.get('applied_regime')}"
+            divergence_detail: dict[str, Any] = {}
+        elif not data.get("computed_regime"):
+            status = "fail"
+            message = f"산출={data.get('computed_regime')} 적용={data.get('applied_regime')}"
+            divergence_detail = assessment.detail
+        else:
+            status = assessment.status
+            message = assessment.message
+            divergence_detail = assessment.detail
         checks.append(HealthCheck(
             module="compass_output",
             name="regime_computed",
-            status="pass" if data.get("computed_regime") else "fail",
-            message=f"산출={data.get('computed_regime')} 적용={data.get('applied_regime')}",
+            status=status,  # type: ignore[arg-type]
+            message=message,
             detail={
-                "override_active": (data.get("override") or {}).get("active"),
+                "override_active": override.get("active"),
                 "tier2_used": data.get("tier2_used"),
                 "execution_level": data.get("execution_level"),
+                "divergence": divergence_detail,
             },
         ))
 
@@ -685,7 +702,7 @@ def run_system_health(
 
     checks.extend(_check_price_coverage_gates(data_dir, output_dir, resolved_as_of))
     if output_dir.exists():
-        checks.extend(_check_outputs(output_dir))
+        checks.extend(_check_outputs(data_dir, output_dir))
 
     summary = {"pass": 0, "warn": 0, "fail": 0, "skip": 0}
     for c in checks:

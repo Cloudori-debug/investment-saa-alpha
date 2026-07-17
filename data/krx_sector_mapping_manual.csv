@@ -38,3 +38,4 @@ ticker,name,market,krx_sector,internal_sector,sector_group,source,asof,is_manual
 023590,다우기술,KOSPI,서비스업,IT서비스/소프트웨어,it_services,manual,2026-07-06,true,top10_unknown_fix
 088350,한화생명,KOSPI,보험,생명보험,insurance,manual,2026-07-06,true,top10_unknown_fix
 025540,한국단자,KOSPI,전기전자,전자부품/커넥터,electronic_components,manual,2026-07-06,true,top10_unknown_fix
+012510,더존비즈온,KOSPI,IT 서비스,IT 서비스,it_services,manual,2026-07-16,true,gate_pass_unknown_fix

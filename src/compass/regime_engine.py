@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from src.compass.economic_phase import (
@@ -11,6 +12,8 @@ from src.compass.economic_phase import (
     score_liquidity,
     score_risk_appetite,
 )
+from src.compass.hysteresis import apply_phase_hysteresis, apply_regime_hysteresis
+from src.compass.judgment_log import judgment_log_path, read_judgment_log_tail
 from src.compass.models import (
     CompassDirection,
     CompassResult,
@@ -161,6 +164,8 @@ def compute_compass(
     data_gate: str = "GREEN",
     execution_level: int = 1,
     tier2: MacroTier2 | None = None,
+    output_dir: Path | None = None,
+    judgment_history: list[dict[str, Any]] | None = None,
 ) -> CompassResult:
     growth, growth_detail, growth_bd = score_growth(market, rules)
     inflation, inflation_detail, inflation_bd = score_inflation(market, rules)
@@ -186,14 +191,26 @@ def compute_compass(
         growth_detail += f" | Tier2 blend {blend_w:.0%}"
         score_breakdown.extend(tier2_bd)
 
-    phase, phase_conf = classify_market_phase(growth, rules)
+    computed_phase, phase_conf = classify_market_phase(growth, rules)
     computed_regime, regime_conf, regime_bd = _classify_risk_regime(market, growth, risk, rules)
     direction = _resolve_compass_direction(growth, risk, rules)
+
+    history = judgment_history
+    if history is None and output_dir is not None:
+        confirm = max(
+            int((rules.get("hysteresis") or {}).get("regime_confirm_runs", 2) or 2),
+            int((rules.get("hysteresis") or {}).get("phase_confirm_runs", 2) or 2),
+        )
+        history = read_judgment_log_tail(judgment_log_path(output_dir), n=max(confirm + 2, 8))
+    history = history or []
+
+    applied_phase, phase_h_note = apply_phase_hysteresis(computed_phase, history, rules)
 
     manual_raw, regime_expired = _manual_regime_effective(market, use_manual_regime)
     parsed_manual = _manual_regime_to_risk(manual_raw) if manual_raw else None
     applied = computed_regime
     override = OverrideInfo(active=False)
+    hysteresis_note = phase_h_note
 
     if regime_expired and (market.regime or "").strip().upper() not in ("", "NEUTRAL", "AUTO"):
         override = OverrideInfo(
@@ -201,6 +218,9 @@ def compute_compass(
             reason="manual_regime_expired",
             timestamp=market.date,
         )
+        applied, regime_h_note = apply_regime_hysteresis(computed_regime, history, rules)
+        if regime_h_note:
+            hysteresis_note = "; ".join(x for x in (hysteresis_note, regime_h_note) if x)
     elif parsed_manual and parsed_manual != computed_regime:
         applied = parsed_manual
         override = OverrideInfo(
@@ -210,6 +230,10 @@ def compute_compass(
         )
     elif parsed_manual:
         applied = parsed_manual
+    else:
+        applied, regime_h_note = apply_regime_hysteresis(computed_regime, history, rules)
+        if regime_h_note:
+            hysteresis_note = "; ".join(x for x in (hysteresis_note, regime_h_note) if x)
 
     score_breakdown = score_breakdown + regime_bd
 
@@ -222,12 +246,13 @@ def compute_compass(
 
     summary = (
         f"{_DIRECTION_LABELS[direction]} | "
-        f"시장국면 {phase.value} · 적용레짐 {applied.value}"
+        f"시장국면 {applied_phase.value} · 적용레짐 {applied.value}"
     )
 
     return CompassResult(
         date=market.date,
-        market_phase=phase,
+        market_phase=applied_phase,
+        computed_market_phase=computed_phase,
         phase_confidence=round(phase_conf, 2),
         computed_regime=computed_regime,
         regime_confidence=round(regime_conf, 2),
@@ -244,4 +269,5 @@ def compute_compass(
         override=override,
         data_gate=data_gate,
         execution_level=execution_level,
+        hysteresis_note=hysteresis_note,
     )

@@ -6,6 +6,10 @@ Windows 작업 스케줄러 또는 수동 실행:
   python scripts/daily_pipeline.py --as-of 2026-06-22
   python scripts/daily_pipeline.py --run-mode standard
   python scripts/daily_pipeline.py --run-mode deep
+
+알파 정량 스냅샷(alpha_scores + provenance)은 STANDARD 모드의
+refresh_network=False와 분리된 경로입니다:
+  python scripts/run_alpha_quant_snapshot.py --collect
 """
 from __future__ import annotations
 

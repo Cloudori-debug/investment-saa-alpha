@@ -68,6 +68,26 @@ regime_rules:
   risk_off_drawdown: -10
   risk_on_vix_max: 18
   risk_on_requires_ma200: true
+  # computed vs applied severity gap (완화 방향) — AC-05b / health warn 임계
+  override_divergence_warn_gap: 2
+  # gap warn이 연속 N일(로그 기록 일수) 지속 시 재확인 재촉 강화 — 실행 게이트 변경 없음
+  override_divergence_escalation_days: 3
+  override_divergence_review_buffer_days: 2
+  # AC-05: override 설정 후 영업일 — 5일 warn, 15일 장기 미검토 메시지 승격(여전히 warn)
+  override_age_warn_days: 5
+  override_age_escalation_days: 15
+  # 조건부 조기 재검토 (경고만 — override/cap 자동 변경 없음)
+  early_review_worsening_dd_delta_pct: -5.0
+  early_review_recovery_dd_threshold: -15.0  # crisis_kospi_drawdown과 동일 기본값
+
+# ECONOMIC_COMPASS phase 0 — tilt influence shrink (calibration log accumulates under scale).
+tilt_governance:
+  taa_tilt_scale: 0.4   # 0단계 기본값 — 기존 대비 40%만 반영. 4단계 실측 후 조정.
+
+# ECONOMIC_COMPASS phase 1 — Bry-Boschan-style minimum duration (confirm consecutive runs).
+hysteresis:
+  regime_confirm_runs: 2   # 연속 2회 동일해야 레짐 확정 (CRISIS 진입은 즉시 — 코드 비대칭)
+  phase_confirm_runs: 2
 
 direction_map:
   # growth_score, risk_appetite_score 사분면 → 나침반 방향

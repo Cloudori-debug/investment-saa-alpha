@@ -107,16 +107,21 @@ def _build_snapshot_row(
     tv_today = close * volume
     metrics = _compute_price_metrics(close_s) if close_s is not None else {}
 
-    mcap = 0.0
+    # Market cap: leave NaN (missing) when the API returns nothing.
+    # Never fabricate 0.0 — a silent 0 is indistinguishable from a real tiny cap
+    # and would make the market-cap gate reject the name as "low_market_cap".
+    mcap: float = float("nan")
     if cap_today is not None:
         for key in ("시가총액", "market_cap"):
             if key in cap_today.index:
-                mcap = float(cap_today[key])
+                val = float(cap_today[key])
+                mcap = val if val > 0 else float("nan")
                 break
-    elif cap_hist is not None and not cap_hist.empty:
+    if (mcap != mcap) and cap_hist is not None and not cap_hist.empty:  # NaN check
         mcap_s = _col(cap_hist, "시가총액", "market_cap")
         if mcap_s is not None and not mcap_s.empty:
-            mcap = float(mcap_s.iloc[-1])
+            val = float(mcap_s.iloc[-1])
+            mcap = val if val > 0 else float("nan")
 
     avg20 = 0.0
     if cap_hist is not None and not cap_hist.empty:
@@ -366,6 +371,16 @@ def run_collect(
         if snapshot.empty:
             raise RuntimeError("price_snapshot 수집 0건")
         snapshot.to_csv(snapshot_path, index=False, encoding="utf-8-sig")
+
+        if "market_cap" in snapshot.columns:
+            missing_cap = int(
+                pd.to_numeric(snapshot["market_cap"], errors="coerce").isna().sum()
+            )
+            if missing_cap:
+                warnings.append(
+                    f"시가총액 미수집 {missing_cap}/{len(snapshot)}종 — PyKRX 시총 조회 실패. "
+                    "게이트가 low_market_cap으로 자동 탈락시키므로 유효 거래일로 재수집 필요."
+                )
 
         per_pbr_map: dict[str, dict[str, float]] = {}
         if enrich:

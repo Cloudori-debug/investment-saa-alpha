@@ -73,6 +73,8 @@ selection:
   min_all_pillar_floor: 45
   max_sector_count: 2
   default_proposed_weight_pct: 2.5
+  # non-satellite 제안 상한(포트 %). satellite는 target_matrix satellite_cap.single_name_sleeve_pct를
+  # kr_alpha_budget으로 동적 환산(운영 진실 B). 고정 8%를 satellite에 쓰지 말 것.
   max_proposed_weight_pct: 8.0
   min_proposal_count: 6
 

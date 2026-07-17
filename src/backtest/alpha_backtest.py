@@ -32,7 +32,8 @@ class QuintileRow:
 
 @dataclass
 class AlphaBacktestResult:
-    dates: list[str] = field(default_factory=list)
+    dates: list[str] = field(default_factory=list)  # 가격 이력 커버리지 (품질 라벨 근거 아님)
+    scored_dates: list[str] = field(default_factory=list)  # 실제 스코어·quintile 기여 일
     quintiles: list[QuintileRow] = field(default_factory=list)
     top_n_avg_return: float = 0.0
     universe_avg_return: float = 0.0
@@ -45,6 +46,7 @@ class AlphaBacktestResult:
     sample_quality: str = "insufficient"
     cost_assumptions: dict[str, Any] = field(default_factory=dict)
     round_trip_cost_bps: float = 0.0
+    usable_from_date_kinds: int = 0
     warnings: list[str] = field(default_factory=list)
 
 
@@ -131,9 +133,11 @@ def run_alpha_lite_backtest(
     if lookback_days is not None and lookback_days > 0 and dates:
         dates = dates[-int(lookback_days) :]
     result.dates = dates
+    result.usable_from_date_kinds = _count_usable_from_date_kinds(data_dir)
     all_quintile_returns: list[list[float]] = [[] for _ in range(5)]
     top_returns: list[float] = []
     uni_returns: list[float] = []
+    scored_dates: list[str] = []
 
     for as_of in dates:
         prices_by_ticker = _prices_from_frame(hist, as_of)
@@ -149,10 +153,13 @@ def run_alpha_lite_backtest(
             scored["quintile"] = pd.qcut(scored["total_score"], 5, labels=False, duplicates="drop")
         except ValueError:
             continue
+        scored_dates.append(as_of)
         for q in range(5):
             bucket = scored[scored["quintile"] == q]
             if not bucket.empty:
                 all_quintile_returns[q].append(float(bucket["return_3m"].mean()))
+
+    result.scored_dates = scored_dates
 
     if uni_returns:
         result.universe_avg_return = round(float(np.mean(uni_returns)), 4)
@@ -185,16 +192,54 @@ def run_alpha_lite_backtest(
     if len(quintile_avgs) >= 2:
         result.monotonic = quintile_avgs[-1] >= quintile_avgs[0]
 
-    result.sample_quality = sample_quality_label(len(result.dates))
+    # 품질 라벨은 실제 기여 일수(scored_dates) 기준 — 가격 커버리지(dates)와 혼동 금지
+    result.sample_quality = sample_quality_label(len(result.scored_dates))
     if result.sample_quality == "insufficient":
-        result.warnings.append("예측력 판단 불가 — 참고용 (표본 < 60일)")
+        result.warnings.append("예측력 판단 불가 — 참고용 (유효 표본 < 60일)")
     elif result.sample_quality == "preliminary":
-        result.warnings.append("예비 검증 — 확정 아님 (표본 60~180일)")
+        result.warnings.append("예비 검증 — 확정 아님 (유효 표본 60~180일)")
 
     if not result.quintiles:
         result.warnings.append("스코어 가능 일수 부족 — prices_history 확장 권장")
 
+    pit_warning = _pit_coverage_warning(
+        price_history_days=len(result.dates),
+        scored_days=len(result.scored_dates),
+        usable_from_date_kinds=result.usable_from_date_kinds,
+    )
+    if pit_warning:
+        result.warnings.append(pit_warning)
+
     return result
+
+
+def _count_usable_from_date_kinds(data_dir: Path) -> int:
+    path = data_dir / "fundamentals.csv"
+    if not path.exists():
+        return 0
+    try:
+        df = pd.read_csv(path, dtype=str, keep_default_na=False, usecols=["usable_from_date"])
+    except (ValueError, KeyError):
+        return 0
+    values = {str(v).strip()[:10] for v in df["usable_from_date"] if str(v).strip()}
+    return len(values)
+
+
+def _pit_coverage_warning(
+    *,
+    price_history_days: int,
+    scored_days: int,
+    usable_from_date_kinds: int,
+) -> str | None:
+    if price_history_days <= 0:
+        return None
+    if scored_days / price_history_days >= 0.3:
+        return None
+    kinds = usable_from_date_kinds if usable_from_date_kinds > 0 else "?"
+    return (
+        f"PIT 재무 데이터가 단일 스냅샷(usable_from_date 종류 {kinds}개)이라 "
+        "유효 표본이 가격 데이터 범위 대비 크게 작음 — 결과를 전략 판단 근거로 사용하지 말 것"
+    )
 
 
 def write_alpha_backtest_outputs(result: AlphaBacktestResult, output_dir: Path) -> None:
@@ -206,6 +251,9 @@ def write_alpha_backtest_outputs(result: AlphaBacktestResult, output_dir: Path) 
     pd.DataFrame(rows).to_csv(output_dir / "alpha_backtest_quintiles.csv", index=False, encoding="utf-8-sig")
 
     a = result.cost_assumptions or {}
+    price_history_days = len(result.dates)
+    scored_days_used = len(result.scored_dates)
+    quality = result.sample_quality or sample_quality_label(scored_days_used)
     summary = pd.DataFrame(
         [
             {
@@ -219,13 +267,15 @@ def write_alpha_backtest_outputs(result: AlphaBacktestResult, output_dir: Path) 
                 "sample_quality": result.sample_quality,
                 "lookback_days": result.lookback_days if result.lookback_days is not None else "",
                 "monotonic_quintiles": result.monotonic,
-                "dates_used": len(result.dates),
+                "price_history_days": price_history_days,
+                "scored_days_used": scored_days_used,
+                # legacy alias — 품질 라벨 근거인 유효 기여 일수
+                "dates_used": scored_days_used,
             }
         ]
     )
     summary.to_csv(output_dir / "alpha_backtest_summary.csv", index=False, encoding="utf-8-sig")
 
-    quality = result.sample_quality or sample_quality_label(len(result.dates))
     banner = sample_quality_banner(quality)
     commission = a.get("commission_bps", 15)
     slippage = a.get("slippage_bps", 20)
@@ -237,7 +287,7 @@ def write_alpha_backtest_outputs(result: AlphaBacktestResult, output_dir: Path) 
     ]
     if quality == "insufficient":
         lines.extend([
-            f"> **{banner}** — 표본 {len(result.dates)}일 (< 60). "
+            f"> **{banner}** — 유효 표본 {scored_days_used}일 (< 60). "
             "Gross/Net 수치는 팩터 정렬 참고용이며 운용 근거로 쓰지 말 것.",
             "",
         ])
@@ -245,7 +295,14 @@ def write_alpha_backtest_outputs(result: AlphaBacktestResult, output_dir: Path) 
         lines.extend([f"> 품질 라벨: **{quality}** — {banner}", ""])
 
     lines.extend([
-        f"- 사용 일수: {len(result.dates)}일 · 품질: `{quality}`",
+        (
+            f"- 유효 기여 일수 (`scored_days_used`): **{scored_days_used}일** "
+            f"· 품질 라벨 근거: `{quality}`"
+        ),
+        (
+            f"- 가격 이력 커버리지 (`price_history_days`): {price_history_days}일 "
+            "— 참고용, 품질 라벨 근거 아님"
+        ),
         f"- Top-{result.top_n} 평균 3M 수익률 (Gross): **{result.top_n_avg_return:.2%}**",
         f"- Universe 평균: **{result.universe_avg_return:.2%}**",
         f"- Gross Top-{result.top_n} 초과수익: **{result.top_n_excess:.2%}**",

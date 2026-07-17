@@ -60,6 +60,11 @@ def execute_pipeline_with_run_mode(
         run_mode=cfg.run_mode.value,
         entrypoint=entrypoint,
     )
+    if entrypoint == "cli":
+        from src.runtime.cli_progress import cli_progress_callback, print_cli_run_header
+
+        prof.on_step = cli_progress_callback
+        print_cli_run_header(run_mode=cfg.run_mode.value, entrypoint=entrypoint)
     return run_pipeline_with_mode(
         data_dir,
         output_dir,
