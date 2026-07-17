@@ -52,6 +52,7 @@
 | 결재함 전용 UI | 메뉴=`홈·결재함·포트폴리오·저널`. CECS/T2/논지/저널 직접기입 제거. 수집→출처확인→영역별승인만 (`approval.py`, 2026-07-17) |
 | 편입 수·컷오프 연동 | 철학 정합 복원: **절대 cutoff 먼저 → 편입 수 5~8(기본 6)**. 6~30 상대순위 슬라이더는 설계 충돌로 철회. target 자동 변경 없음 (2026-07-18) |
 | 최종선정 갭보완 | 절대 cutoff → 섹터당≤2(`sector_group`) → 5~8. 목표가 없으면 대기후보·편입 차단(다음 주 E). B/E는 proposal만(CECS fallback 제거) (2026-07-18) |
+| 안정판 저장 | 커밋 `614a87c` + 태그 `stable-20260718-final-selection`. 검증 문서 `ALPHA_FINAL_SELECTION_HARDENING_RESULT`(Claude 재검증용). focused 37 passed (2026-07-18) |
 
 ### Alpha BT 라벨 — 검증 완료 (2026-07-14, 옵션 a 종료)
 
