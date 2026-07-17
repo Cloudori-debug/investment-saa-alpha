@@ -54,6 +54,7 @@
 | 최종선정 갭보완 | 절대 cutoff → 섹터당≤2(`sector_group`) → 5~8. 목표가 없으면 대기후보·편입 차단(다음 주 E). B/E는 proposal만(CECS fallback 제거) (2026-07-18) |
 | 안정판 저장 | 커밋 `614a87c` + 태그 `stable-20260718-final-selection`. 검증 문서 `ALPHA_FINAL_SELECTION_HARDENING_RESULT`(Claude 재검증용). focused 37 passed (2026-07-18) |
 | cleanup A+C | 상대순위 슬라이더 제거(포트폴리오 절대컷만). 죽은 페이지·디버그 스크립트 → `archive/20260718_*`. `CODEBASE_CLEANUP_AC_20260718_RESULT` (2026-07-18) |
+| cleanup B+D | 대체 API(AI검증·CECS writer·save_cecs_score) + 일회성 스크립트 8개 archive. `CODEBASE_CLEANUP_BD_20260718_RESULT` (2026-07-18) |
 
 ### Alpha BT 라벨 — 검증 완료 (2026-07-14, 옵션 a 종료)
 

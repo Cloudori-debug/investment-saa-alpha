@@ -14,7 +14,6 @@ from alpha_system.ui.services.cecs_workbench import (
     approve_ai_suggestions,
     import_ai_suggestions,
 )
-from alpha_system.ui.services.journal_filters import categorize
 
 
 def test_parser_isolates_bad_stock_and_converts_fixed_fields() -> None:

@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from alpha_system.journal import clear_entries, list_entries
+from alpha_system.journal import clear_entries
 from alpha_system.loader import load_config
 from alpha_system.ui.services.cecs_workbench import (
     CecsProgress,
@@ -18,7 +18,6 @@ from alpha_system.ui.services.cecs_workbench import (
     cutoff_actions_enabled,
     default_relative_cutoff_rank,
     generate_correlation_report,
-    save_cecs_score,
 )
 from alpha_system.ui.services.go_live_gate import assess_checklist
 from alpha_system.ui.services.t3_history_refresh import try_generate_t3_history
@@ -74,33 +73,13 @@ def test_cutoff_action_is_disabled_before_30() -> None:
     )
 
 
-def test_final_requires_all_rationales_and_preserves_source(tmp_path: Path) -> None:
-    path = _template(tmp_path / "cecs.csv", final_n=29)
-    before = path.read_bytes()
-    with pytest.raises(ValueError, match="근거 3개"):
-        save_cecs_score(
-            path=path,
-            ticker="000030",
-            execution=0.5,
-            execution_rationale="",
-            pension=0.5,
-            pension_rationale="pension",
-            purpose=0.5,
-            purpose_rationale="purpose",
-            status="final",
-            scored_by="tester",
-            as_of=_ASOF,
-        )
-    assert path.read_bytes() == before
-
-
-def test_final_save_updates_go_live_checklist_immediately(tmp_path: Path) -> None:
+def test_cecs_final_checklist_updates_when_template_complete(tmp_path: Path) -> None:
+    """Go-live CECS gate tracks template final count (no direct-entry save API)."""
     clear_entries()
     root = tmp_path
     data = root / "data"
     data.mkdir()
     path = _template(data / "cecs_manual_scoring_template.csv", final_n=29)
-    # Complete the other two checklist items.
     (data / "kospi_market_pbr_history.csv").write_text(
         "month_end,market_pbr\n2026-06-30,0.9\n",
         encoding="utf-8",
@@ -115,29 +94,22 @@ def test_final_save_updates_go_live_checklist_immediately(tmp_path: Path) -> Non
     before = assess_checklist(cfg, root=root, go_live_date=None)
     assert next(i for i in before.items if i.key == "cecs_final").ok is False
 
-    result = save_cecs_score(
-        path=path,
-        ticker="000030",
-        execution=0.75,
-        execution_rationale="execution evidence",
-        pension=0.5,
-        pension_rationale="pension evidence",
-        purpose=1.0,
-        purpose_rationale="purpose evidence",
-        status="final",
-        scored_by="tester",
-        as_of=_ASOF,
-        journal_path=data / "journal.jsonl",
-    )
-    after = assess_checklist(cfg, root=root, go_live_date=None)
+    frame = pd.read_csv(path, dtype=str)
+    idx = frame.index[frame["ticker"].astype(str).str.zfill(6) == "000030"][0]
+    frame.at[idx, "execution_continuity"] = "0.75"
+    frame.at[idx, "execution_rationale"] = "execution evidence"
+    frame.at[idx, "pension_flow_score"] = "0.50"
+    frame.at[idx, "pension_rationale"] = "pension evidence"
+    frame.at[idx, "investment_purpose_flag"] = "1.00"
+    frame.at[idx, "investment_purpose_rationale"] = "purpose evidence"
+    frame.at[idx, "cecs_computed"] = "70.00"
+    frame.at[idx, "scored_by"] = "tester"
+    frame.at[idx, "scored_at"] = _ASOF.isoformat()
+    frame.at[idx, "status"] = "final"
+    frame.to_csv(path, index=False)
 
-    assert result.final == result.total == 30
+    after = assess_checklist(cfg, root=root, go_live_date=None)
     assert next(i for i in after.items if i.key == "cecs_final").ok is True
-    assert "CECS_SCORE_FINALIZED" in {entry.action_kind for entry in list_entries()}
-    saved = pd.read_csv(path, dtype=str)
-    row = saved[saved["ticker"].astype(str).str.zfill(6) == "000030"].iloc[0]
-    assert row["status"] == "final"
-    assert row["execution_rationale"] == "execution evidence"
     clear_entries()
 
 
