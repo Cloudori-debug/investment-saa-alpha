@@ -16,13 +16,6 @@ from alpha_system.ui.services.runtime_state import RuntimeState
 from alpha_system.ui.services.ui_copy import copy_get
 
 
-def render_events(ctx: DashboardContext) -> None:
-    """Legacy entry — redirects to the approval hub."""
-    from alpha_system.ui.pages.approval import render_approval
-
-    render_approval(ctx)
-
-
 def _render_weekly_qual(
     ctx: DashboardContext,
     *,

@@ -19,11 +19,8 @@ from alpha_system.sizing.allocate import allocate_tranche
 from alpha_system.ui.services.action_queue import ActionItem
 from alpha_system.ui.services.auto_journal import journal_data_refresh
 from alpha_system.ui.services.cecs_workbench import (
-    build_relative_cutoff_ladder,
     cecs_progress,
-    confirm_score_cutoff,
     cutoff_actions_enabled,
-    default_relative_cutoff_rank,
     generate_correlation_report,
     load_cecs_template,
 )
@@ -516,131 +513,27 @@ def _panel_checklist_cutoff(ctx: DashboardContext, item: ActionItem) -> None:
     else:
         st.caption("임계값 이상의 높은 상관 쌍이 없습니다.")
 
-    st.info(copy_get("checklist_panel", "cutoff_relative_help"))
-    scored = [
-        {
-            "ticker": row.ticker,
-            "name": row.name,
-            "total_score": row.total_score,
-        }
-        for row in ctx.scoreboard_rows
-        if row.total_score is not None
-    ]
-    ladder = build_relative_cutoff_ladder(scored)
-    if not ladder:
-        st.error("스코어보드 점수가 없어 상대 컷오프를 만들 수 없습니다.")
-        return
-
-    by_rank = {option.rank_n: option for option in ladder}
-    natural = [option for option in ladder if option.is_natural_break]
-    suggested = default_relative_cutoff_rank(ladder)
-    if "cutoff_rank_slider" not in st.session_state:
-        st.session_state["cutoff_rank_slider"] = suggested
-
-    if natural:
-        st.markdown("**객관 선택지 — 점수 단절점(갭이 큰 순위)**")
-        labels = {
-            option.rank_n: (
-                f"상위 {option.rank_n}종 · cutoff {option.cutoff:.2f} · "
-                f"갭 {option.margin_below:.2f}"
-                if option.margin_below is not None
-                else f"상위 {option.rank_n}종 · cutoff {option.cutoff:.2f}"
-            )
-            for option in natural
-        }
-        break_ranks = [option.rank_n for option in natural]
-        radio_index = (
-            break_ranks.index(suggested) if suggested in break_ranks else 0
+    st.info(copy_get("checklist_panel", "cutoff_absolute_help"))
+    current = ctx.cfg.scoring.score_cutoff
+    target_n = int(ctx.cfg.sizing.target_names)
+    if current is None:
+        st.warning(
+            "score_cutoff가 아직 미확정입니다. "
+            "포트폴리오 화면에서 절대 컷오프 → 편입 수(5~8) 순으로 확정하세요."
         )
-        picked_break = st.radio(
-            "단절점 고르기",
-            options=break_ranks,
-            format_func=lambda rank: labels[rank],
-            index=radio_index,
-            key="cutoff_natural_break",
+    else:
+        st.markdown(
+            f"- 현재 `score_cutoff`: **{current:.2f}**\n"
+            f"- 현재 `target_names`: **{target_n}종** (5~8 밴드)"
         )
-        if st.button("선택 단절점을 슬라이더에 적용", key="cutoff_apply_break"):
-            st.session_state["cutoff_rank_slider"] = picked_break
-            st.rerun()
-
-    current = int(st.session_state["cutoff_rank_slider"])
-    if current not in by_rank:
-        st.session_state["cutoff_rank_slider"] = suggested
-    rank_n = st.slider(
-        "① 최종 후보(적격)로 남길 상위 종목 수",
-        min_value=ladder[0].rank_n,
-        max_value=ladder[-1].rank_n,
-        step=1,
-        key="cutoff_rank_slider",
-        help=(
-            "선택한 경계 순위의 total_score가 절대 score_cutoff가 됩니다. "
-            "편입 종목 수(target_names)는 여기서 바꾸지 않습니다."
-        ),
-    )
-    selected = by_rank[int(rank_n)]
-    st.markdown(
-        f"- 파생 `score_cutoff`: **{selected.cutoff:.2f}**\n"
-        f"- 실제 적격 종목 수: **{selected.eligible_count}종**"
-        + (
-            f" (동점 포함, 목표 상위 {selected.rank_n})"
-            if selected.eligible_count != selected.rank_n
-            else ""
-        )
-        + "\n"
-        f"- 경계: `{selected.boundary_ticker}` {selected.boundary_name} "
-        f"= {selected.cutoff:.2f}"
-        + (
-            f"\n- 바로 아래: `{selected.next_ticker}` {selected.next_name} "
-            f"= {selected.next_score:.2f} · 갭 **{selected.margin_below:.2f}**"
-            if selected.next_ticker is not None and selected.margin_below is not None
-            else "\n- 바로 아래: 없음 (전체 통과)"
-        )
-    )
-    confirm_1 = st.checkbox(
-        "② " + copy_get("checklist_panel", "cutoff_confirm_1"),
-        key="cutoff_confirm_1",
-    )
-    confirm_2 = st.checkbox(
-        "② " + copy_get("checklist_panel", "cutoff_confirm_2"),
-        key="cutoff_confirm_2",
-    )
-    can_confirm = confirm_1 and confirm_2
-    if not can_confirm:
-        missing = []
-        if not confirm_1:
-            missing.append("검토 확인")
-        if not confirm_2:
-            missing.append("영향 이해 확인")
-        st.caption("확정 버튼 비활성 이유: " + " · ".join(missing) + " 미완료")
     if st.button(
-        "③ score_cutoff 최종 확정",
+        "포트폴리오에서 절대 컷오프·편입 수 확정",
         type="primary",
-        disabled=not can_confirm,
-        key="cutoff_confirm_save",
+        key="cutoff_goto_portfolio",
     ):
-        try:
-            backup = confirm_score_cutoff(
-                config_path=ctx.root / "alpha_system" / "config" / "alpha_system.yaml",
-                cecs_path=cecs_path,
-                cutoff=float(selected.cutoff),
-                confirm_understood=confirm_1,
-                confirm_final=confirm_2,
-                as_of=ctx.as_of,
-                journal_path=ctx.root / "data" / "alpha_system_journal.jsonl",
-                eligible_count=selected.eligible_count,
-                rank_n=selected.rank_n,
-                method="relative_rank_slider",
-            )
-        except Exception as exc:
-            st.error(str(exc))
-        else:
-            st.success(
-                f"score_cutoff={selected.cutoff:.2f} 확정 "
-                f"(상위 {selected.rank_n}종) · 백업 `{backup.name}`"
-            )
-            st.session_state.pop(SESSION_PANEL, None)
-            st.session_state.pop(report_key, None)
-            st.rerun()
+        st.session_state.pop(SESSION_PANEL, None)
+        navigate(PAGE_PORTFOLIO)
+    _render_checklist_recheck(ctx, "score_cutoff")
 
 
 def _panel_checklist_t3(ctx: DashboardContext, item: ActionItem) -> None:

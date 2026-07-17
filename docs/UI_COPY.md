@@ -69,7 +69,7 @@ action_queue:
   exit_reduce: "청산·감축 신호입니다. 이유: {why}. 할 일: 포트폴리오에서 확인 후 집행하세요."
   swap_observe: "스왑 후보(관찰)입니다. 이유: {why}. 할 일: 교체 여부를 검토만 하고 자동 집행하지 마세요."
   tranche_ready: "{name} 집행 신호가 있습니다. 이유: {why}. 할 일: 집행 여부를 승인하세요."
-  data_stale: "데이터 갱신이 필요합니다. 이유: {why}. 할 일: 설정·이벤트에서 갱신을 실행하세요."
+  data_stale: "데이터 갱신이 필요합니다. 이유: {why}. 할 일: 결재함(또는 홈)에서 갱신을 실행하세요."
   today_none: "오늘 할 일 없음 — 다음 판정: {next}"
   window_end_wind_down: "논지 창이 종료되었습니다. 이유: window_end {date}. 할 일: 정리 판정을 확인하세요."
 
@@ -142,8 +142,8 @@ checklist_panel:
   cutoff_situation: "score_cutoff 미확정"
   cutoff_locked: "CECS 채점 완료 후 활성화됩니다 ({final}/{total})."
   t3_situation: "KOSPI 시장 PBR 이력 CSV 없음"
-  cutoff_relative_help: "절대 점수를 직접 입력하지 않습니다. 이번 스크린 순위에서 최종 후보로 남길 상위 종목 수를 고르면 score_cutoff가 그 경계 점수로 따라 붙습니다."
-  cutoff_confirm_1: "상관 리포트와 상대 순위(단절점)를 검토했습니다"
+  cutoff_absolute_help: "절대 score_cutoff → eligibility → 편입 수(5~8) 순으로 확정합니다. 상대순위(상위 N종 수를 먼저 고르는) 방식은 쓰지 않습니다. 확정은 포트폴리오 화면에서만 합니다."
+  cutoff_confirm_1: "절대 컷오프와 경계 종목을 확인했습니다"
   cutoff_confirm_2: "이 값이 편입 eligibility와 향후 exit 판정에 연결됨을 이해하고 확정합니다"
 
 go_live:

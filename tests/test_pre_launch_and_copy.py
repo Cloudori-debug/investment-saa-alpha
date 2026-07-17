@@ -62,7 +62,10 @@ def test_go_live_in_snapshot_unlocks_t1() -> None:
 
 def test_checklist_blocks_incomplete(tmp_path: Path) -> None:
     cfg = load_config()
-    # empty root → CECS/T3 missing, score_cutoff still null
+    cfg = cfg.model_copy(
+        update={"scoring": cfg.scoring.model_copy(update={"score_cutoff": None})}
+    )
+    # empty root → CECS/T3 missing; cutoff forced null for this gate check
     status = assess_checklist(cfg, root=tmp_path, go_live_date=None)
     assert status.ready_for_go_live is False
     keys = {i.key for i in status.blocking}
