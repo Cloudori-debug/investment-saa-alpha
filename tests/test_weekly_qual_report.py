@@ -69,6 +69,71 @@ def test_weekly_be_requires_deep_subjects(tmp_path: Path) -> None:
         )
 
 
+def test_apply_targets_fails_closed_when_deep_tickers_empty(tmp_path: Path) -> None:
+    clear_entries()
+    root = tmp_path
+    (root / "data").mkdir()
+    (root / "data" / "target_portfolio.csv").write_text(
+        "ticker,asset_group,target_weight\n005830,kr_alpha,10\n", encoding="utf-8"
+    )
+    suggestions = {
+        "report_id": "WQR-empty-deep",
+        "deep_tickers": [],
+        "targets": [
+            {
+                "ticker": "005830",
+                "pbr_max": 1.0,
+                "fundamental_reason": "x",
+                "rationale": "y",
+                "sources": ["https://example.com"],
+            }
+        ],
+        "source_reviewed": {"targets": ["005830"]},
+        "approved": {k: False for k in ("cecs", "t2", "thesis", "targets")},
+        "domain_status": {"targets": "ai_suggested"},
+    }
+    import json
+
+    (root / "data" / "weekly_qual_suggestions.json").write_text(
+        json.dumps(suggestions, ensure_ascii=False), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="deep_tickers"):
+        approve_domain(
+            root=root,
+            domain="targets",
+            approved_by="operator",
+            as_of=date(2026, 7, 18),
+            reviewed_keys=["005830"],
+            journal_path=tmp_path / "j.jsonl",
+            exit_targets_path=root / "data" / "kr_alpha_exit_targets.yaml",
+            confirm_steps=2,
+        )
+    clear_entries()
+
+
+def test_persist_deep_tickers_ignores_targets_union(tmp_path: Path) -> None:
+    from alpha_system.ui.services.weekly_qual_report import (
+        parse_weekly_qual_markdown,
+        persist_weekly_suggestions,
+    )
+
+    root = tmp_path
+    (root / "data").mkdir()
+    parsed = parse_weekly_qual_markdown(_filled_weekly_md())
+    out = persist_weekly_suggestions(
+        root=root,
+        parsed=parsed,
+        report_name="x.md",
+        as_of=date(2026, 7, 18),
+        locked_deep_tickers=["005830"],
+    )
+    import json
+
+    data = json.loads(out.read_text(encoding="utf-8"))
+    assert data["deep_tickers"] == ["005830"]
+    assert "999999" not in data["deep_tickers"]
+
+
 def test_apply_targets_rejects_ticker_not_in_final_snapshot(tmp_path: Path) -> None:
     clear_entries()
     root = tmp_path

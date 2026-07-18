@@ -58,6 +58,9 @@ def test_parser_accepts_unverifiable_blank_score_as_neutral_50() -> None:
     purpose = parsed.suggestions[0].purpose
     assert purpose.score_100 == 50.0
     assert purpose.sources == ("확인 불가",)
+    assert purpose.provisional is True
+    assert parsed.suggestions[0].execution.provisional is False
+    assert parsed.suggestions[0].pension.provisional is False
 
 
 def test_parser_accepts_blank_score_with_rationale_and_bare_urls() -> None:
@@ -87,9 +90,12 @@ def test_parser_accepts_blank_score_with_rationale_and_bare_urls() -> None:
     assert len(parsed.suggestions) == 1
     row = parsed.suggestions[0]
     assert row.execution.score_100 == 50.0
+    assert row.execution.provisional is True
     assert row.execution.sources[0].startswith("https://www.hankyung.com/")
     assert row.pension.score_100 == 50.0
+    assert row.pension.provisional is True
     assert row.pension.sources == ("확인 불가",)
+    assert row.purpose.provisional is True
     assert row.purpose.sources[0].startswith("http://www.newstheone.com/")
 
 

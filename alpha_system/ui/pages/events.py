@@ -119,11 +119,13 @@ def _render_weekly_qual(
         ):
             text = uploaded.getvalue().decode("utf-8-sig")
             parsed = parse_weekly_qual_markdown(text)
+            locked = st.session_state.get("weekly_qual_deep_tickers") or []
             out = persist_weekly_suggestions(
                 root=ctx.root,
                 parsed=parsed,
                 report_name=uploaded.name,
                 as_of=ctx.as_of or _date.today(),
+                locked_deep_tickers=list(locked) if locked else None,
             )
             st.success(
                 "업로드 완료: "
@@ -264,8 +266,13 @@ def _render_domain_report(payload: dict, domain: str) -> None:
                     ("execution", "pension", "purpose"),
                     ("실행·환원", "연기금", "투자목적"),
                 ):
-                    score = (item.get(axis) or {}).get("score_100")
-                    col.metric(label, f"{score:g}" if isinstance(score, (int, float)) else "—")
+                    detail = item.get(axis) or {}
+                    score = detail.get("score_100")
+                    provisional = bool(detail.get("provisional"))
+                    display = f"{score:g}" if isinstance(score, (int, float)) else "—"
+                    if provisional and isinstance(score, (int, float)):
+                        display = f"{score:g} · AI잠정"
+                    col.metric(label, display)
 
                 for axis, label in (
                     ("execution", "실행·환원"),
@@ -273,7 +280,10 @@ def _render_domain_report(payload: dict, domain: str) -> None:
                     ("purpose", "투자목적"),
                 ):
                     detail = item.get(axis) or {}
-                    st.markdown(f"**{label} 판단**")
+                    title = f"**{label} 판단**"
+                    if detail.get("provisional"):
+                        title += " · `AI 잠정값(빈 점수→50)` — 사람 확인 전 최종으로 쓰지 마세요"
+                    st.markdown(title)
                     st.write(detail.get("rationale") or "내용 없음")
                     _render_sources(detail.get("sources") or [])
 

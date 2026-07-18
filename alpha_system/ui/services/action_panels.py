@@ -9,7 +9,10 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-from alpha_system.entry.entry_gates import check_entry_target_valuation
+from alpha_system.entry.entry_gates import (
+    check_entry_target_valuation,
+    missing_entry_target_tickers,
+)
 from alpha_system.entry.hard_rules import block_reverse_execution
 from alpha_system.entry.models import TrancheState
 from alpha_system.journal import append_record
@@ -303,15 +306,20 @@ def _panel_execute(ctx: DashboardContext, item: ActionItem) -> None:
                         + (f" · 약 {sug['krw']:,.0f}원" if sug.get("krw") is not None else "")
                     )
                 tk = str(tkr).zfill(6)
-                blocked_tv, tv_detail = check_entry_target_valuation(
+                missing = missing_entry_target_tickers(
                     ctx.cfg,
-                    ticker=tk,
-                    has_target_valuation=tk in target_ok,
+                    entry_tickers=[tk],
+                    has_target_by_ticker={tk: tk in target_ok},
                 )
-                if blocked_tv:
+                if missing:
+                    blocked_tv, tv_detail = check_entry_target_valuation(
+                        ctx.cfg,
+                        ticker=tk,
+                        has_target_valuation=tk in target_ok,
+                    )
                     st.error(
                         "대기 후보 — 목표가 승인 전 편입 차단. "
-                        f"({tv_detail})"
+                        f"({tv_detail if blocked_tv else missing[0]})"
                     )
                     continue
                 px = st.number_input(
@@ -324,6 +332,15 @@ def _panel_execute(ctx: DashboardContext, item: ActionItem) -> None:
                     if px <= 0 or qty <= 0:
                         st.error("체결가·수량 필요")
                     else:
+                        # Re-check via same SoT as attempt_execute before journaling.
+                        again = missing_entry_target_tickers(
+                            ctx.cfg,
+                            entry_tickers=[tk],
+                            has_target_by_ticker={tk: tk in target_ok},
+                        )
+                        if again:
+                            st.error("목표가 미승인 — 체결 기록 차단")
+                            continue
                         append_record(
                             action_kind="TRANCHE_EXEC_FILL",
                             as_of=date.today(),
@@ -334,23 +351,46 @@ def _panel_execute(ctx: DashboardContext, item: ActionItem) -> None:
                                 "fill_price": px,
                                 "fill_qty": qty,
                                 "suggested_krw": sug.get("krw") if sug else None,
+                                "entry_target_gate": "ok",
                             },
                         )
                         st.success("집행 기록이 저널에 저장되었습니다.")
                         st.rerun()
         if st.button(f"{tid} 트랜치 집행 일괄 확인 기록", key=f"ex_ack_{tid}"):
-            append_record(
-                action_kind="TRANCHE_EXEC_ACK",
-                as_of=date.today(),
-                subject=tid,
-                rationale="operator acknowledged tranche execution (fills may be partial)",
-                payload={
-                    "tranche_id": tid,
-                    "tranche_krw_est": tranche_krw,
-                },
+            ack_tickers = [
+                str(a["ticker"]).zfill(6)
+                for a in suggested
+                if a.get("ticker")
+            ]
+            has_map = {t: t in target_ok for t in ack_tickers}
+            # Same SoT as attempt_execute (empty list = no names left to gate).
+            ack_missing = missing_entry_target_tickers(
+                ctx.cfg,
+                entry_tickers=ack_tickers,
+                has_target_by_ticker=has_map,
             )
-            st.success("트랜치 집행 확인이 저널에 기록되었습니다.")
-            st.rerun()
+            if ack_missing:
+                st.error(
+                    "목표가 미승인 대기 후보가 남아 일괄 확인 불가 — "
+                    + "; ".join(ack_missing)
+                )
+            else:
+                append_record(
+                    action_kind="TRANCHE_EXEC_ACK",
+                    as_of=date.today(),
+                    subject=tid,
+                    rationale=(
+                        "operator acknowledged tranche execution "
+                        "(fills may be partial); entry_target_gate=missing_entry_target_tickers"
+                    ),
+                    payload={
+                        "tranche_id": tid,
+                        "tranche_krw_est": tranche_krw,
+                        "entry_tickers": ack_tickers,
+                    },
+                )
+                st.success("트랜치 집행 확인이 저널에 기록되었습니다.")
+                st.rerun()
 
     aux = copy_get("action_panel", "full_screen_aux", default="전체 화면에서 보기")
     if st.button(f"{aux} (규칙/이벤트)", key=f"ex_full_{tid}"):

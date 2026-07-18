@@ -56,6 +56,7 @@
 | cleanup A+C | 상대순위 슬라이더 제거(포트폴리오 절대컷만). 죽은 페이지·디버그 스크립트 → `archive/20260718_*`. `CODEBASE_CLEANUP_AC_20260718_RESULT` (2026-07-18) |
 | cleanup B+D | 대체 API(AI검증·CECS writer·save_cecs_score) + 일회성 스크립트 8개 archive. `CODEBASE_CLEANUP_BD_20260718_RESULT` (2026-07-18) |
 | Claude 검수 브리프 | `docs/CLAUDE_REVIEW_BRIEF_20260718.md` — P0 하드닝·P1 cleanup 잔재·불변규칙. 외부 Claude 붙여넣기용 (2026-07-18) |
+| 검수 채택 3건 반영 | provisional 배지(빈점수→50) · deep_tickers fail-closed · entry 목표가 게이트 SoT 일원화 (`missing_entry_target_tickers`) (2026-07-18) |
 
 ### Alpha BT 라벨 — 검증 완료 (2026-07-14, 옵션 a 종료)
 

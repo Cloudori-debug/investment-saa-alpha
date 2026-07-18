@@ -298,12 +298,17 @@ def _apply_targets(
     updated: list[str] = []
     allowed_raw = payload.get("deep_tickers") or payload.get("final_tickers") or []
     allowed = {str(t).zfill(6) for t in allowed_raw if str(t).strip()}
+    if not allowed:
+        raise ValueError(
+            "목표가 승인 거부: deep_tickers(최종 선정)가 비어 있습니다. "
+            "요청서를 proposal_book 기준으로 다시 생성·업로드하세요."
+        )
     rejected: list[str] = []
     for item in payload.get("targets") or []:
         ticker = str(item.get("ticker") or "").zfill(6)
         if not ticker:
             continue
-        if allowed and ticker not in allowed:
+        if ticker not in allowed:
             rejected.append(ticker)
             continue
         entry = dict(tickers.get(ticker) or {})
@@ -328,7 +333,7 @@ def _apply_targets(
             + ", ".join(rejected)
             + ". 요청서를 현재 final로 다시 생성하세요."
         )
-    if allowed and not updated and (payload.get("targets") or []):
+    if not updated and (payload.get("targets") or []):
         raise ValueError("목표가 승인 거부: 최종 선정과 일치하는 목표가 제안이 없습니다.")
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -384,6 +389,7 @@ def _dict_to_suggestion(item: dict[str, Any]) -> ParsedResearchSuggestion:
             score_100=float(raw.get("score_100")),
             rationale=str(raw.get("rationale") or ""),
             sources=tuple(raw.get("sources") or ("확인 불가",)),
+            provisional=bool(raw.get("provisional", False)),
         )
 
     return ParsedResearchSuggestion(

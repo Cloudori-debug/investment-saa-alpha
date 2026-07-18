@@ -24,6 +24,8 @@ class ParsedResearchAxis:
     score_100: float
     rationale: str
     sources: tuple[str, ...]
+    # True when AI left the score blank and the parser filled a neutral 50.
+    provisional: bool = False
 
 
 @dataclass(frozen=True)
@@ -116,10 +118,11 @@ def _parse_axis(block: str, axis: str) -> ParsedResearchAxis:
         raise ValueError(f"{axis} 근거 미작성")
     unverifiable = _is_unverifiable(rationale)
 
+    provisional = False
     if not score_text or set(score_text) <= {"_"}:
-        # Blank score → provisional 50 when facts exist (AI may leave score for human).
-        # Unverifiable blanks also map to neutral 50.
+        # Blank score → provisional 50 (AI left score for human). Must stay labeled.
         score = 50.0
+        provisional = True
     else:
         try:
             score = float(score_text)
@@ -142,6 +145,7 @@ def _parse_axis(block: str, axis: str) -> ParsedResearchAxis:
         score_100=score,
         rationale=rationale,
         sources=sources,
+        provisional=provisional,
     )
 
 

@@ -14,7 +14,7 @@ from typing import Mapping, Optional, Sequence
 
 
 
-from alpha_system.entry.entry_gates import check_entry_target_valuation
+from alpha_system.entry.entry_gates import missing_entry_target_tickers
 
 from alpha_system.entry.hard_rules import (
 
@@ -874,24 +874,27 @@ def attempt_execute(
         weight=effective_weight,
         as_of=as_of,
     )
-    if blocked is None and entry_tickers and cfg.exit.entry_require_target_valuation:
-        missing = []
-        for raw in entry_tickers:
-            ticker = str(raw).zfill(6)
-            has_tv = bool((has_target_by_ticker or {}).get(ticker, False))
-            is_blocked, detail = check_entry_target_valuation(
-                cfg, ticker=ticker, has_target_valuation=has_tv
-            )
-            if is_blocked:
-                missing.append(f"{ticker} ({detail})")
+    if blocked is None and cfg.exit.entry_require_target_valuation:
+        missing = missing_entry_target_tickers(
+            cfg,
+            entry_tickers=entry_tickers,
+            has_target_by_ticker=has_target_by_ticker,
+        )
         if missing:
+            if missing == ["*"]:
+                reason = (
+                    "entry blocked: entry_tickers omitted while "
+                    "entry_require_target_valuation=true — pass tickers (or [] if none)"
+                )
+            else:
+                reason = (
+                    "entry blocked: waiting candidates lack target valuation — "
+                    + "; ".join(missing)
+                )
             blocked = EntryAction(
                 action_type=EntryActionType.WARN_BLOCKED,
                 tranche_id=tranche_id,
-                reason=(
-                    "entry blocked: waiting candidates lack target valuation — "
-                    + "; ".join(missing)
-                ),
+                reason=reason,
                 weight=effective_weight,
                 as_of=as_of,
                 blocked=True,

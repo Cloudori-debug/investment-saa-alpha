@@ -107,6 +107,7 @@ def test_t4_follow_on_50pct_when_t2_fires_after_partial(cfg) -> None:
         status=t4_12,
         as_of=date(2027, 7, 16),
         journal=False,
+        entry_tickers=[],
     )
     assert partial.state == TrancheState.PARTIAL_EXECUTED
     assert partial.meta.get("remaining_fraction") == 0.5
@@ -143,6 +144,7 @@ def test_t4_follow_on_50pct_when_t2_fires_after_partial(cfg) -> None:
         status=t4,
         as_of=date(2027, 8, 16),
         journal=False,
+        entry_tickers=[],
     )
     assert done.state == TrancheState.EXECUTED
 
@@ -226,6 +228,29 @@ def test_attempt_execute_allows_when_all_targets_present(cfg) -> None:
     )
     assert action.blocked is False
     assert updated.state == TrancheState.EXECUTED
+
+
+def test_attempt_execute_fails_closed_when_entry_tickers_omitted(cfg) -> None:
+    from alpha_system.entry.models import TrancheStatus
+    from alpha_system.schema import TriggerType
+
+    status = TrancheStatus(
+        tranche_id=TrancheId.T1,
+        state=TrancheState.READY,
+        weight=0.25,
+        trigger_type=TriggerType.TIME,
+        trigger_met=True,
+    )
+    _, action = attempt_execute(
+        cfg,
+        tranche_id=TrancheId.T1,
+        status=status,
+        as_of=date(2026, 7, 18),
+        journal=False,
+        entry_tickers=None,
+    )
+    assert action.blocked is True
+    assert "entry_tickers omitted" in action.reason
 
 
 def test_target_valuation_price_modify_warns(cfg) -> None:

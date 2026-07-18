@@ -20,7 +20,7 @@ import tempfile
 from dataclasses import asdict, dataclass, field
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 from alpha_system.journal import append_record
 from alpha_system.ui.services.cecs_ai_research import (
@@ -388,6 +388,7 @@ def persist_weekly_suggestions(
     report_name: str,
     as_of: date,
     journal_path: Path | None = None,
+    locked_deep_tickers: Sequence[str] | None = None,
 ) -> Path:
     """Store domain-isolated AI suggestions without applying to engine inputs."""
     out = root / "data" / "weekly_qual_suggestions.json"
@@ -413,17 +414,13 @@ def persist_weekly_suggestions(
         "t2": [asdict(e) for e in parsed.t2_events],
         "thesis": asdict(parsed.thesis) if parsed.thesis else None,
         "targets": [asdict(t) for t in parsed.targets],
-        "deep_tickers": sorted(
-            {
-                str(getattr(d, "ticker", "") or "").zfill(6)
-                for d in parsed.deep_dives
-                if getattr(d, "ticker", None)
-            }
-            | {
-                str(getattr(t, "ticker", "") or "").zfill(6)
-                for t in parsed.targets
-                if getattr(t, "ticker", None)
-            }
+        # Proposal-only allowlist: deep_dives (B) only — never union targets (E),
+        # or a rogue target ticker could admit itself. Prefer caller lock, else
+        # previous snapshot from report generation, else deep_dives tickers.
+        "deep_tickers": _resolve_locked_deep_tickers(
+            locked_deep_tickers=locked_deep_tickers,
+            previous=previous,
+            deep_dives=parsed.deep_dives,
         ),
         "source_reviewed": {k: [] for k in DOMAIN_KEYS},
         "approved": {k: False for k in DOMAIN_KEYS},
@@ -757,12 +754,40 @@ def _float_blank(raw: str) -> float | None:
         return None
 
 
+def _resolve_locked_deep_tickers(
+    *,
+    locked_deep_tickers: Sequence[str] | None,
+    previous: Mapping[str, Any],
+    deep_dives: Sequence[Any],
+) -> list[str]:
+    """Proposal-book allowlist only — never expand from targets section."""
+    if locked_deep_tickers:
+        return sorted(
+            {
+                str(t).zfill(6)
+                for t in locked_deep_tickers
+                if str(t).strip()
+            }
+        )
+    prev = previous.get("deep_tickers") or []
+    if prev:
+        return sorted({str(t).zfill(6) for t in prev if str(t).strip()})
+    return sorted(
+        {
+            str(getattr(d, "ticker", "") or "").zfill(6)
+            for d in deep_dives
+            if getattr(d, "ticker", None)
+        }
+    )
+
+
 def _suggestion_dict(suggestion: ParsedResearchSuggestion) -> dict[str, Any]:
     def axis(a: ParsedResearchAxis) -> dict[str, Any]:
         return {
             "score_100": a.score_100,
             "rationale": a.rationale,
             "sources": list(a.sources),
+            "provisional": bool(getattr(a, "provisional", False)),
         }
 
     return {
