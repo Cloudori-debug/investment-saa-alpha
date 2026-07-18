@@ -16,7 +16,10 @@ from alpha_system.ui.services.weekly_domain_gates import approve_domain, mark_so
 from alpha_system.ui.services.weekly_qual_report import (
     WeeklySubject,
     parse_weekly_qual_markdown,
+    persist_targets_supplement,
     persist_weekly_suggestions,
+    waiting_target_subjects,
+    write_targets_supplement_report,
     write_weekly_qual_report,
 )
 
@@ -487,3 +490,118 @@ def _filled_weekly_md() -> str:
 - 출처:
   - https://example.com/val
 """
+
+
+def test_targets_supplement_e_only_and_merge(tmp_path: Path) -> None:
+    clear_entries()
+    root = tmp_path
+    (root / "data").mkdir()
+    (root / "data" / "kr_alpha_exit_targets.yaml").write_text(
+        "tickers:\n  '005830':\n    valuation:\n      pbr_max: 1.0\n",
+        encoding="utf-8",
+    )
+    # Pre-existing CECS suggestion envelope must survive supplement merge.
+    import json
+
+    prior = {
+        "report_id": "WQR-prior",
+        "domain_status": {
+            "cecs": "ai_suggested",
+            "t2": "empty",
+            "thesis": "empty",
+            "targets": "empty",
+        },
+        "cecs": [{"ticker": "005830", "name": "DB"}],
+        "targets": [],
+        "approved": {k: False for k in ("cecs", "t2", "thesis", "targets")},
+        "deep_tickers": ["005830", "021240"],
+    }
+    (root / "data" / "weekly_qual_suggestions.json").write_text(
+        json.dumps(prior, ensure_ascii=False), encoding="utf-8"
+    )
+
+    from alpha_system.ui.services.weekly_qual_report import (
+        persist_targets_supplement,
+        waiting_target_subjects,
+        write_targets_supplement_report,
+    )
+
+    rows = [
+        WeeklySubject("005830", "DB손해보험", "insurance"),
+        WeeklySubject("021240", "코웨이", "consumer"),
+    ]
+    waiting = waiting_target_subjects(rows, root=root)
+    assert [s.ticker for s in waiting] == ["021240"]
+
+    report = write_targets_supplement_report(
+        waiting_subjects=waiting,
+        proposal_tickers=["005830", "021240"],
+        docs_dir=root / "docs",
+        as_of=date(2026, 7, 18),
+        generated_at=datetime(2026, 7, 18, 10, 0, 0),
+        journal_path=root / "journal.jsonl",
+    )
+    assert "E_TARGET_VALUATION" in report.markdown
+    assert "A_CECS_SUMMARY" not in report.markdown
+    assert "021240" in report.markdown
+    assert "005830" not in report.markdown.split("## E_TARGET_VALUATION", 1)[1]
+    assert list_entries(action_kind="WEEKLY_TARGETS_SUPPLEMENT_GENERATED")
+
+    filled = """# supplement
+- report_id: `WQR-E-test`
+
+## E_TARGET_VALUATION
+
+### TARGET [021240] 코웨이
+- pbr_max: 2.1
+- target_price: 140000
+- 펀더멘털 사유: 렌탈 계정 순증
+- 근거: 피어 대비
+- 출처:
+  - https://example.com/coway
+"""
+    parsed = parse_weekly_qual_markdown(filled)
+    assert parsed.targets and parsed.targets[0].ticker == "021240"
+    out = persist_targets_supplement(
+        root=root,
+        parsed=parsed,
+        report_name="supp.md",
+        as_of=date(2026, 7, 18),
+        proposal_tickers=["005830", "021240"],
+        waiting_tickers=["021240"],
+        journal_path=root / "journal.jsonl",
+    )
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    assert payload["mode"] == "targets_supplement"
+    assert payload["domain_status"]["cecs"] == "ai_suggested"
+    assert payload["domain_status"]["targets"] == "ai_suggested"
+    assert payload["cecs"][0]["ticker"] == "005830"
+    assert {t["ticker"] for t in payload["targets"]} == {"021240"}
+    assert set(payload["deep_tickers"]) == {"005830", "021240"}
+    assert list_entries(action_kind="WEEKLY_TARGETS_SUPPLEMENT_IMPORT")
+    clear_entries()
+
+
+def test_targets_supplement_rejects_outside_waiting(tmp_path: Path) -> None:
+    root = tmp_path
+    (root / "data").mkdir()
+    filled = """## E_TARGET_VALUATION
+
+### TARGET [000660] SK하이닉스
+- pbr_max: 1.5
+- target_price: 200000
+- 펀더멘털 사유: x
+- 근거: y
+- 출처:
+  - https://example.com/h
+"""
+    parsed = parse_weekly_qual_markdown(filled)
+    with pytest.raises(ValueError, match="최종 선정 밖|대기 목록"):
+        persist_targets_supplement(
+            root=root,
+            parsed=parsed,
+            report_name="bad.md",
+            as_of=date(2026, 7, 18),
+            proposal_tickers=["021240"],
+            waiting_tickers=["021240"],
+        )

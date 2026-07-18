@@ -57,6 +57,7 @@
 | cleanup B+D | 대체 API(AI검증·CECS writer·save_cecs_score) + 일회성 스크립트 8개 archive. `CODEBASE_CLEANUP_BD_20260718_RESULT` (2026-07-18) |
 | Claude 검수 브리프 | `docs/CLAUDE_REVIEW_BRIEF_20260718.md` — P0 하드닝·P1 cleanup 잔재·불변규칙. 외부 Claude 붙여넣기용 (2026-07-18) |
 | 검수 채택 3건 반영 | provisional 배지(빈점수→50) · deep_tickers fail-closed · entry 목표가 게이트 SoT 일원화 (`missing_entry_target_tickers`) (2026-07-18) |
+| 목표가 대기 보충 | E-only 요청서·업로드 병합·결재함 탭3. 섹터 캡(≤2)·스타일 인원캡 없음 — **변경 없음** (2026-07-18) |
 
 ### Alpha BT 라벨 — 검증 완료 (2026-07-14, 옵션 a 종료)
 
@@ -72,10 +73,10 @@
 3. **경제 나침반** — (a) Turbulence 게이트 WAIT **25/60행**. (b) 방법 B 백테스트 완료(`METHOD_B_RESULT`) — excess DSR 비유의·MDD 개선만. 임계값 미변경
 4. **익절·테제 P0** — yaml 7종 초안·로직 검증 완료. 2차(실행 연동) 미승인
 5. **스크린→객관 6종 (정책 B)** — UI proposal_book = dry CLI 동일 경로(`select_eligible`+섹터 캡). 주간 정성 승인 후 운영. target 자동쓰기 금지
-6. **주간 정성 운영** — 금 요청서 → 주말 작성 → 월 영역별 승인. B/E=현재 proposal만. 목표가 대기후보는 다음 주 E까지 편입 차단
-7. ~~객관 고점수·섹터분산~~ — `max_names_per_sector=2` + shortfall 반영 완료 (2026-07-18)
+6. **주간 정성 운영** — 금 요청서 → 주말 작성 → 월 영역별 승인. B/E=현재 proposal만. 목표가 대기는 E 보충(탭3)으로 채운 뒤 승인·편입
+7. ~~객관 고점수·섹터분산~~ — `max_names_per_sector=2` + shortfall 반영 완료 (2026-07-18). 스타일(Q/V) 인원캡 없음 — 추가 변경 불필요
 8. (후순위) Alpha BT 옵션 b — PIT 재무 히스토리 · QVM-SR 유효성 검증
-
+9. ~~목표가 대기 보충~~ — E-only 생성·병합·UI 탭3 완료 (2026-07-18)
 ---
 
 ## 0. 한 줄 운영 원칙

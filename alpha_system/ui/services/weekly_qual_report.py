@@ -811,6 +811,210 @@ def _atomic_write_text(path: Path, text: str) -> None:
             os.remove(tmp_name)
 
 
+def load_exit_target_tickers(root: Path) -> set[str]:
+    """Approved target-valuation tickers from kr_alpha_exit_targets.yaml."""
+    import yaml
+
+    path = root / "data" / "kr_alpha_exit_targets.yaml"
+    if not path.exists():
+        return set()
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return set()
+    tickers = data.get("tickers") or {}
+    return {str(t).zfill(6) for t in tickers if str(t).strip()}
+
+
+def waiting_target_subjects(
+    proposal_rows: Sequence[Any],
+    *,
+    root: Path,
+) -> list[WeeklySubject]:
+    """Proposal-book names that still lack approved exit target valuation."""
+    have = load_exit_target_tickers(root)
+    waiting: list[WeeklySubject] = []
+    for row in subjects_from_portfolio_rows(proposal_rows):
+        if row.ticker not in have:
+            waiting.append(row)
+    return waiting
+
+
+def build_targets_supplement_markdown(
+    *,
+    waiting_subjects: Sequence[WeeklySubject],
+    proposal_tickers: Sequence[str],
+    as_of: date,
+    generated_at: datetime,
+    report_id: str,
+) -> str:
+    """E-only request for waiting candidates (no A–D redo)."""
+    subjects = tuple(_norm_subject(s) for s in waiting_subjects)
+    prop = sorted({str(t).zfill(6) for t in proposal_tickers if str(t).strip()})
+    lines = [
+        "# 목표가 대기 후보 보충 요청서 (E only)",
+        "",
+        f"- report_id: `{report_id}`",
+        f"- as_of: `{as_of.isoformat()}`",
+        f"- generated_at: `{generated_at.isoformat(timespec='seconds')}`",
+        "- mode: `targets_supplement`",
+        f"- proposal_tickers: `{', '.join(prop)}`",
+        f"- waiting_tickers: `{', '.join(s.ticker for s in subjects)}`",
+        "",
+        f"> {USAGE_WARNING}",
+        "",
+        "이 파일은 **목표가(E)만** 채웁니다. CECS/T2/논지는 건드리지 마세요.",
+        "대상은 현재 제안 북 중 목표가 미승인(대기) 종목뿐입니다.",
+        "`pbr_max`는 배수 숫자만, `target_price`는 원 단위 숫자만.",
+        "",
+        "---",
+        "",
+        "## E_TARGET_VALUATION",
+        "",
+    ]
+    for subject in subjects:
+        lines.extend(
+            [
+                f"### TARGET [{subject.ticker}] {subject.name}",
+                "- pbr_max: _____",
+                "- target_price: _____",
+                "- 펀더멘털 사유: _____",
+                "- 근거: _____",
+                "- 출처:",
+                "  - ",
+                "",
+            ]
+        )
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def write_targets_supplement_report(
+    *,
+    waiting_subjects: Sequence[WeeklySubject],
+    proposal_tickers: Sequence[str],
+    docs_dir: Path,
+    as_of: date | None = None,
+    generated_at: datetime | None = None,
+    journal_path: Path | None = None,
+) -> WeeklyQualReport:
+    if not waiting_subjects:
+        raise ValueError("대기 후보(목표가 미승인)가 없습니다.")
+    generated_at = generated_at or datetime.now()
+    as_of = as_of or generated_at.date()
+    report_id = f"WQR-E-{generated_at.strftime('%Y%m%d-%H%M%S')}"
+    waiting = tuple(_norm_subject(s) for s in waiting_subjects)
+    prop = sorted({str(t).zfill(6) for t in proposal_tickers if str(t).strip()})
+    markdown = build_targets_supplement_markdown(
+        waiting_subjects=waiting,
+        proposal_tickers=prop,
+        as_of=as_of,
+        generated_at=generated_at,
+        report_id=report_id,
+    )
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    path = docs_dir / f"weekly_qual_targets_supplement_{generated_at.strftime('%Y%m%d')}.md"
+    _atomic_write_text(path, markdown)
+    append_record(
+        action_kind="WEEKLY_TARGETS_SUPPLEMENT_GENERATED",
+        as_of=as_of,
+        subject=report_id,
+        rationale=f"targets supplement request: {path.name}",
+        payload={
+            "path": str(path),
+            "report_id": report_id,
+            "waiting_tickers": [s.ticker for s in waiting],
+            "proposal_tickers": prop,
+            "domains": ["targets"],
+        },
+        journal_path=journal_path,
+    )
+    return WeeklyQualReport(
+        markdown=markdown,
+        path=path,
+        report_id=report_id,
+        as_of=as_of,
+        generated_at=generated_at,
+        input_snapshot_hash="",
+        summary_tickers=(),
+        deep_tickers=tuple(s.ticker for s in waiting),
+    )
+
+
+def persist_targets_supplement(
+    *,
+    root: Path,
+    parsed: WeeklyParseResult,
+    report_name: str,
+    as_of: date,
+    proposal_tickers: Sequence[str],
+    waiting_tickers: Sequence[str],
+    journal_path: Path | None = None,
+) -> Path:
+    """Merge E-only upload into suggestions without wiping other domains."""
+    if not parsed.targets:
+        raise ValueError("목표가 제안이 없습니다. E_TARGET_VALUATION을 채우세요.")
+    prop = sorted({str(t).zfill(6) for t in proposal_tickers if str(t).strip()})
+    waiting = {str(t).zfill(6) for t in waiting_tickers if str(t).strip()}
+    if not prop:
+        raise ValueError("proposal_tickers(최종 선정)가 필요합니다.")
+    for t in parsed.targets:
+        tk = str(t.ticker).zfill(6)
+        if tk not in prop:
+            raise ValueError(
+                f"목표가 보충 거부: 최종 선정 밖 종목 {tk}. "
+                "현재 proposal_book 기준으로 다시 생성하세요."
+            )
+        if waiting and tk not in waiting:
+            raise ValueError(
+                f"목표가 보충 거부: 대기 목록에 없는 종목 {tk}."
+            )
+
+    out = root / "data" / "weekly_qual_suggestions.json"
+    previous = load_weekly_suggestions(root)
+    payload = dict(previous) if previous else {}
+    payload.setdefault("domain_status", {k: "empty" for k in DOMAIN_KEYS})
+    payload.setdefault("domain_failures", {k: [] for k in DOMAIN_KEYS})
+    payload.setdefault("source_reviewed", {k: [] for k in DOMAIN_KEYS})
+    payload.setdefault("approved", {k: False for k in DOMAIN_KEYS})
+    payload["report_id"] = parsed.report_id or payload.get("report_id") or "WQR-E"
+    payload["report_name"] = report_name
+    payload["as_of"] = as_of.isoformat()
+    payload["imported_at"] = datetime.now().isoformat(timespec="seconds")
+    payload["mode"] = "targets_supplement"
+    payload["deep_tickers"] = prop
+    # Merge targets: keep prior non-waiting rows, replace waiting tickers.
+    prior_targets = [
+        t
+        for t in (payload.get("targets") or [])
+        if str(t.get("ticker") or "").zfill(6) not in waiting
+    ]
+    new_targets = [asdict(t) for t in parsed.targets]
+    payload["targets"] = prior_targets + new_targets
+    payload["domain_status"]["targets"] = "ai_suggested"
+    payload["domain_failures"]["targets"] = list(
+        (parsed.domain_failures or {}).get("targets") or []
+    )
+    payload["source_reviewed"]["targets"] = []
+    payload["approved"]["targets"] = False
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_write_text(out, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    append_record(
+        action_kind="WEEKLY_TARGETS_SUPPLEMENT_IMPORT",
+        as_of=as_of,
+        subject=str(payload.get("report_id") or report_name),
+        rationale="targets supplement import → targets ai_suggested only",
+        payload={
+            "path": str(out),
+            "waiting_tickers": sorted(waiting),
+            "proposal_tickers": prop,
+            "target_tickers": [str(t.ticker).zfill(6) for t in parsed.targets],
+        },
+        journal_path=journal_path,
+    )
+    return out
+
+
 # Keep CecsResearchSubject import available for callers that adapt lists.
 __all__ = [
     "DOMAIN_KEYS",
@@ -822,7 +1026,12 @@ __all__ = [
     "write_weekly_qual_report",
     "parse_weekly_qual_markdown",
     "persist_weekly_suggestions",
+    "persist_targets_supplement",
     "load_weekly_suggestions",
+    "load_exit_target_tickers",
+    "waiting_target_subjects",
+    "build_targets_supplement_markdown",
+    "write_targets_supplement_report",
     "subjects_from_cecs_df",
     "subjects_from_portfolio_rows",
     "CecsResearchSubject",

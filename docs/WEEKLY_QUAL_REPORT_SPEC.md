@@ -45,9 +45,23 @@
   `final → ai_suggested → final`을 즉시 수행하고 원장에 기록
 - FASTJUSIK 금지 · `proposal_mode: pure_qvm` 유지
 
+## 목표가 대기 보충 (E only)
+
+제안 북 중 `kr_alpha_exit_targets.yaml`에 아직 없는 종목만 대상으로 한다.
+
+| 단계 | 동작 |
+|------|------|
+| 생성 | `weekly_qual_targets_supplement_YYYYMMDD.md` — `E_TARGET_VALUATION`만 |
+| 업로드 | `persist_targets_supplement` — **targets만** 병합, CECS/T2/논지 유지 |
+| 승인 | 기존 목표가 카드만 · exit YAML만 갱신 · `target_portfolio.csv` 불변 |
+
+- `deep_tickers` = 현재 proposal_book 전체 (편입 게이트 allowlist)
+- proposal 밖·대기 목록 밖 종목은 업로드 거부
+
 ## 저장물
 
 - 요청서: `docs/weekly_qual_report_YYYYMMDD.md`
+- 목표가 보충: `docs/weekly_qual_targets_supplement_YYYYMMDD.md`
 - 미승인 제안 봉투: `data/weekly_qual_suggestions.json`
 - 정량 provenance: `data/alpha_quant_snapshot_provenance.json`
 - 스코어: `alpha_portfolio/data/output/alpha_scores.csv`
@@ -60,3 +74,4 @@
 4. UI 제안 6종 = dry CLI 6종
 5. 목표가 승인 후 `target_portfolio.csv` 해시 불변
 6. 미승인 정성 입력이 eligibility/트리거에 미반영
+7. 대기 보충은 E만 생성·병합하며 다른 domain 상태를 지우지 않음
