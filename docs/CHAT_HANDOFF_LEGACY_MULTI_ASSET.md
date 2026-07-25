@@ -5,7 +5,17 @@
 > **원본 채팅 transcript:** `93ceb171-5386-4466-a75e-f5010b0da3b4`  
 > **작성일:** 2026-07-11 · **단일 채팅 정리:** 2026-07-14
 
-**다른 채팅에서 시작할 때:** 이 파일을 먼저 읽고, 아래 「불변 규칙」을 어기지 말 것.
+### v1 / v2 분리 (2026-07-19)
+
+| | 경로 | 역할 |
+|--|------|------|
+| **v1 (이 저장소)** | `C:\Cursor\investment-saa-alpha` | **유지·운영** — 만족하는 선정·UI 기준판. 대규모 기능 추가 지양 |
+| **v2** | `C:\Cursor\investment-saa-alpha-v2` | **등급업 개발** — 재채점 신호 레이어·운영 보완. 차터 `investment-saa-alpha-v2/docs/V2_CHARTER.md` |
+
+- 차트·수급으로 순위 변경 / CECS 자동 조정은 **어느 쪽에서도 하지 않음**
+- 신규 기능·실험은 **v2만**. v1에는 버그·운영 핫픽스만
+
+**다른 채팅에서 시작할 때:** 이 파일을 먼저 읽고, 아래 「불변 규칙」을 어기지 말 것. v2 작업이면 v2 폴더 + `V2_CHARTER.md`.
 
 ---
 
@@ -22,6 +32,7 @@
 
 | 영역 | RESULT / 요지 |
 |------|----------------|
+| **Ops A CECS (v2)** | v2만: `total_score` 정량 100%(cecs 가중 0). 정성 필수=T2·논지·목표가. 상세는 v2 핸드오프 (2026-07-25) |
 | kr_alpha min/max 밴드 | `TARGET_MINMAX_BAND_FIX_RESULT` — 예산 스케일 시 min/max 동반 |
 | 위성 캡 | `SATELLITE_CAP_ALIGNMENT_RESULT` — sleeve×budget 동적 캡, 071050 정렬 |
 | 레짐 격차 경고 | `REGIME_OVERRIDE_DIVERGENCE_ALERT_RESULT` — AC-05b |
@@ -58,6 +69,10 @@
 | Claude 검수 브리프 | `docs/CLAUDE_REVIEW_BRIEF_20260718.md` — P0 하드닝·P1 cleanup 잔재·불변규칙. 외부 Claude 붙여넣기용 (2026-07-18) |
 | 검수 채택 3건 반영 | provisional 배지(빈점수→50) · deep_tickers fail-closed · entry 목표가 게이트 SoT 일원화 (`missing_entry_target_tickers`) (2026-07-18) |
 | 목표가 대기 보충 | E-only 요청서·업로드 병합·결재함 탭3. 섹터 캡(≤2)·스타일 인원캡 없음 — **변경 없음** (2026-07-18) |
+| E 업로드 계약 고정 | 요청서에 `_reference`/`_____`/값줄 주석 금지·완성 예 명시. 파서 실패 메시지 구체화 (2026-07-19) |
+| 홈 주기·신선도 경고 | 판단용 데이터 노후 시 홈 경고+해당 메뉴 이동. 주기 갱신 안내 expander (2026-07-19) |
+| UI 타이포·계층 | 전 메뉴 제목/카드/탭/expander 가독성 강화 (`styles.py`). IA·큰틀 유지 (2026-07-19) |
+| **v2 분리·분할매수 승인** | 등급업은 `C:\Cursor\investment-saa-alpha-v2`. 분할매수 규칙 **승인(2026-07-19)** — v1은 유지판 |
 
 ### Alpha BT 라벨 — 검증 완료 (2026-07-14, 옵션 a 종료)
 
