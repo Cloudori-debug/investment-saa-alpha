@@ -1,4 +1,9 @@
-# investment-saa-alpha — Agent 안내
+# investment-saa-alpha — Agent 안내 (v1 유지판)
+
+## v1 / v2
+
+- **이 저장소 = v1 유지·운영.** 대규모 기능·재채점 레이어는 **`C:\Cursor\investment-saa-alpha-v2`** 에서만.
+- v2 차터: v2 쪽 `docs/V2_CHARTER.md`
 
 ## 단일 채팅방
 
@@ -10,7 +15,7 @@
 
 1. **필수:** [`docs/CHAT_HANDOFF_LEGACY_MULTI_ASSET.md`](docs/CHAT_HANDOFF_LEGACY_MULTI_ASSET.md) 를 읽고 불변 규칙을 따른다.
 2. 하케다카: [`docs/HAKEDAKA_ACCEPTANCE.md`](docs/HAKEDAKA_ACCEPTANCE.md), [`docs/HAKEDAKA_KR_ALPHA_POLICY.md`](docs/HAKEDAKA_KR_ALPHA_POLICY.md)
-3. 작업 루트는 항상 `C:\Cursor\investment-saa-alpha` (구 `multi_asset_trigger_portfolio`에 새 코드를 쓰지 말 것).
+3. **v1 작업** 루트: `C:\Cursor\investment-saa-alpha` · **v2 작업** 루트: `C:\Cursor\investment-saa-alpha-v2`
 4. **알파 대시보드 UI:** [`docs/ALPHA_SYSTEM_UIUX_MASTER_SPEC.md`](docs/ALPHA_SYSTEM_UIUX_MASTER_SPEC.md) 가 단일 기준. 문안은 `docs/UI_COPY.md`.
 
 ## 불변 요약

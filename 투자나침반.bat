@@ -1,16 +1,22 @@
 @echo off
-chcp 65001 >nul
 setlocal
 set PYTHONUNBUFFERED=1
 title Compass
 cd /d "%~dp0"
 
-where python >nul 2>&1
-if errorlevel 1 (
-    echo.
-    echo [ERROR] Python not found.
-    pause
-    exit /b 1
+set "PY="
+where python >nul 2>&1 && set "PY=python"
+if not defined PY (
+  where py >nul 2>&1 && set "PY=py -3"
+)
+if not defined PY (
+  echo.
+  echo [ERROR] Python not found.
+  echo Install Python 3.11+ with "Add to PATH", then reopen this window.
+  echo https://www.python.org/downloads/
+  echo.
+  pause
+  exit /b 1
 )
 
 :MENU
@@ -20,7 +26,7 @@ echo ================================================
 echo   Compass Launcher
 echo ================================================
 echo.
-python "%~dp0scripts\launcher_cred_status.py" 2>nul
+%PY% "%~dp0scripts\launcher_cred_status.py" 2>nul
 if errorlevel 1 echo   API: unavailable
 echo.
 echo [1] UI
@@ -36,31 +42,31 @@ if errorlevel 1 goto RUN_UI
 goto MENU
 
 :RUN_UI
-python -c "import streamlit" >nul 2>&1
+%PY% -c "import streamlit" >nul 2>&1
 if errorlevel 1 (
     echo Installing...
-    python -m pip install --upgrade pip
-    python -m pip install -e ".[dev,ui,data]"
+    %PY% -m pip install --upgrade pip
+    %PY% -m pip install -e ".[dev,ui,data]"
     if errorlevel 1 goto FAIL
 )
 echo.
 echo UI starting. Ctrl+C to stop.
 echo Phone: http://PC-IP:8501 same Wi-Fi only.
 echo.
-streamlit run "%~dp0alpha_dashboard.py" --server.address 0.0.0.0
+%PY% -m streamlit run "%~dp0alpha_dashboard.py" --server.address 0.0.0.0
 if errorlevel 1 goto FAIL
 pause
 goto MENU
 
 :RUN_INSTALL
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev,ui,data]"
+%PY% -m pip install --upgrade pip
+%PY% -m pip install -e ".[dev,ui,data]"
 if errorlevel 1 goto FAIL
 pause
 goto MENU
 
 :RUN_ANALYSIS
-python -m src.main
+%PY% -m src.main
 if errorlevel 1 goto FAIL
 pause
 goto MENU

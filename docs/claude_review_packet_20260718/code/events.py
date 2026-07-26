@@ -34,19 +34,15 @@ def _render_weekly_qual(
         DOMAIN_KEYS,
         load_weekly_suggestions,
         parse_weekly_qual_markdown,
-        persist_targets_supplement,
         persist_weekly_suggestions,
         subjects_from_cecs_df,
         subjects_from_portfolio_rows,
-        waiting_target_subjects,
-        write_targets_supplement_report,
         write_weekly_qual_report,
     )
 
     st.subheader("주간 정성 수집·승인")
     st.caption(
-        "금 요청서 1개 → 주말 작성 → 월 업로드 1회 → 이 화면에서 영역별 승인 · "
-        "목표가 대기만 E 보충 가능"
+        "금 요청서 1개 → 주말 작성 → 월 업로드 1회 → 이 화면에서 영역별 승인"
     )
     if focused:
         st.info("홈의 「지금 할 일」에서 연결되었습니다.")
@@ -57,12 +53,8 @@ def _render_weekly_qual(
     # B/E = current proposal_book only (no CECS summary[:N] fallback).
     n_deep = int(getattr(ctx.cfg.sizing, "target_names", 6) or 6)
     deep = subjects_from_portfolio_rows(ctx.portfolio_rows[:n_deep])
-    proposal_tickers = [s.ticker for s in deep if s.ticker]
-    waiting = waiting_target_subjects(ctx.portfolio_rows[:n_deep], root=ctx.root)
 
-    collect_tab, upload_tab, supp_tab = st.tabs(
-        ["1. 요청서 생성·다운로드", "2. 완성본 업로드", "3. 목표가 대기 보충"]
-    )
+    collect_tab, upload_tab = st.tabs(["1. 요청서 생성·다운로드", "2. 완성본 업로드"])
     with collect_tab:
         st.caption("A CECS 30요약 · B 최종선정 심층 · C T2 · D 논지 · E 목표가")
         can_gen = bool(deep)
@@ -96,7 +88,9 @@ def _render_weekly_qual(
             )
             st.session_state["weekly_qual_md"] = report.markdown
             st.session_state["weekly_qual_path"] = str(report.path)
-            st.session_state["weekly_qual_deep_tickers"] = list(proposal_tickers)
+            st.session_state["weekly_qual_deep_tickers"] = [
+                str(s.get("ticker") or "").zfill(6) for s in deep if s.get("ticker")
+            ]
             st.success(f"생성됨: {report.path.name}")
 
         md = st.session_state.get("weekly_qual_md")
@@ -125,13 +119,11 @@ def _render_weekly_qual(
         ):
             text = uploaded.getvalue().decode("utf-8-sig")
             parsed = parse_weekly_qual_markdown(text)
-            locked = st.session_state.get("weekly_qual_deep_tickers") or proposal_tickers
             out = persist_weekly_suggestions(
                 root=ctx.root,
                 parsed=parsed,
                 report_name=uploaded.name,
                 as_of=ctx.as_of or _date.today(),
-                locked_deep_tickers=list(locked) if locked else None,
             )
             st.success(
                 "업로드 완료: "
@@ -144,93 +136,6 @@ def _render_weekly_qual(
                 if failures:
                     st.warning(f"{domain}: " + "; ".join(failures[:5]))
             st.rerun()
-
-    with supp_tab:
-        st.caption(
-            "제안 북 중 exit YAML에 목표가 없는 종목만 E 전용 요청서. "
-            "요청서 양식의 숫자·문장 칸을 채운 완성본만 업로드 "
-            "(_reference·_____ 미기입 거부). "
-            "CECS/T2/논지는 유지 · 승인해도 target_portfolio.csv 불변."
-        )
-        if not proposal_tickers:
-            st.error("proposal_book이 비어 대기 보충을 만들 수 없습니다.")
-        elif not waiting:
-            st.success("대기 후보 없음 — 제안 북 전 종목에 목표가 승인값이 있습니다.")
-        else:
-            st.info(
-                "대기 "
-                + str(len(waiting))
-                + "종: "
-                + ", ".join(f"{s.ticker} {s.name}" for s in waiting)
-            )
-            if st.button(
-                "목표가 대기 보충 요청서 생성",
-                type="primary",
-                key="btn_targets_supp_gen",
-                use_container_width=True,
-            ):
-                report = write_targets_supplement_report(
-                    waiting_subjects=waiting,
-                    proposal_tickers=proposal_tickers,
-                    docs_dir=ctx.root / "docs",
-                    as_of=ctx.as_of,
-                )
-                st.session_state["targets_supp_md"] = report.markdown
-                st.session_state["targets_supp_path"] = str(report.path)
-                st.session_state["targets_supp_waiting"] = [s.ticker for s in waiting]
-                st.session_state["weekly_qual_deep_tickers"] = list(proposal_tickers)
-                st.success(f"생성됨: {report.path.name}")
-
-            supp_md = st.session_state.get("targets_supp_md")
-            supp_path = st.session_state.get("targets_supp_path")
-            if supp_md:
-                st.download_button(
-                    "보충 요청서 다운로드",
-                    data=supp_md,
-                    file_name=(
-                        Path(supp_path).name
-                        if supp_path
-                        else "weekly_qual_targets_supplement.md"
-                    ),
-                    mime="text/markdown",
-                    key="targets_supp_dl",
-                    use_container_width=True,
-                )
-
-            supp_up = st.file_uploader(
-                "목표가 보충 완성본 Markdown",
-                type=["md", "markdown", "txt"],
-                key="targets_supp_upload",
-            )
-            if supp_up is not None and st.button(
-                "업로드·목표가만 병합",
-                type="primary",
-                key="targets_supp_parse",
-                use_container_width=True,
-            ):
-                text = supp_up.getvalue().decode("utf-8-sig")
-                parsed = parse_weekly_qual_markdown(text)
-                wait_keys = st.session_state.get("targets_supp_waiting") or [
-                    s.ticker for s in waiting
-                ]
-                try:
-                    out = persist_targets_supplement(
-                        root=ctx.root,
-                        parsed=parsed,
-                        report_name=supp_up.name,
-                        as_of=ctx.as_of or _date.today(),
-                        proposal_tickers=proposal_tickers,
-                        waiting_tickers=wait_keys,
-                    )
-                    st.success(
-                        f"목표가 보충 병합 완료 → `{out.name}` · "
-                        f"targets={parsed.domain_status.get('targets')}"
-                    )
-                    for failure in (parsed.domain_failures or {}).get("targets") or []:
-                        st.warning(failure)
-                    st.rerun()
-                except Exception as exc:
-                    st.error(str(exc))
 
     payload = load_weekly_suggestions(ctx.root)
     if not payload:
@@ -245,9 +150,6 @@ def _render_weekly_qual(
         and not approved_map.get(key, False)
     )
     st.markdown("#### 최종 확인·승인판")
-    flash = st.session_state.pop("weekly_approve_flash", None)
-    if flash:
-        st.success(flash)
     st.caption(
         f"승인 남음 {pending_n}영역 · 출처 확인 후 해당 영역만 적용 · "
         "다른 영역 자동 승인 없음 · 승인된 영역도 펼치면 보고서 재확인 가능"
@@ -322,7 +224,7 @@ def _render_weekly_qual(
                 try:
                     # One click stores source review and applies this domain.
                     mark_sources_reviewed(root=ctx.root, domain=domain, keys=keys)
-                    result = approve_domain(
+                    approve_domain(
                         root=ctx.root,
                         domain=domain,
                         approved_by=approver,
@@ -330,16 +232,7 @@ def _render_weekly_qual(
                         reviewed_keys=keys,
                         confirm_steps=confirm,
                     )
-                    skipped = list(
-                        (result.get("applied") or {}).get("skipped_not_in_proposal")
-                        or []
-                    )
-                    msg = f"{domain_label} 승인 완료"
-                    if skipped:
-                        msg += (
-                            f" · 최종 선정 밖 미적용: {', '.join(skipped)}"
-                        )
-                    st.session_state["weekly_approve_flash"] = msg
+                    st.success(f"{domain_label} 승인 완료")
                     st.rerun()
                 except Exception as exc:
                     st.error(str(exc))
@@ -371,13 +264,8 @@ def _render_domain_report(payload: dict, domain: str) -> None:
                     ("execution", "pension", "purpose"),
                     ("실행·환원", "연기금", "투자목적"),
                 ):
-                    detail = item.get(axis) or {}
-                    score = detail.get("score_100")
-                    provisional = bool(detail.get("provisional"))
-                    display = f"{score:g}" if isinstance(score, (int, float)) else "—"
-                    if provisional and isinstance(score, (int, float)):
-                        display = f"{score:g} · AI잠정"
-                    col.metric(label, display)
+                    score = (item.get(axis) or {}).get("score_100")
+                    col.metric(label, f"{score:g}" if isinstance(score, (int, float)) else "—")
 
                 for axis, label in (
                     ("execution", "실행·환원"),
@@ -385,10 +273,7 @@ def _render_domain_report(payload: dict, domain: str) -> None:
                     ("purpose", "투자목적"),
                 ):
                     detail = item.get(axis) or {}
-                    title = f"**{label} 판단**"
-                    if detail.get("provisional"):
-                        title += " · `AI 잠정값(빈 점수→50)` — 사람 확인 전 최종으로 쓰지 마세요"
-                    st.markdown(title)
+                    st.markdown(f"**{label} 판단**")
                     st.write(detail.get("rationale") or "내용 없음")
                     _render_sources(detail.get("sources") or [])
 

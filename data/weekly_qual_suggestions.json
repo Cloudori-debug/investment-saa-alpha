@@ -1,9 +1,9 @@
 {
-  "report_id": "WQR-20260717-230638",
-  "report_name": "weekly_qual_report_20260717_filled_v3.md",
-  "as_of": "2026-07-17",
+  "report_id": "WQR-E-20260719-001326",
+  "report_name": "weekly_qual_targets_supplement_20260719.md",
+  "as_of": "2026-07-19",
   "input_snapshot_hash": "5e4b3e98b23c5589",
-  "imported_at": "2026-07-17T23:12:55",
+  "imported_at": "2026-07-19T00:43:28",
   "domain_status": {
     "cecs": "approved",
     "t2": "approved",
@@ -904,18 +904,6 @@
   },
   "targets": [
     {
-      "ticker": "036530",
-      "name": "SNT홀딩스",
-      "pbr_max": 0.72,
-      "target_price": null,
-      "rationale": "확인 불가(목표 PBR/목표주가); 검색 키워드: SNT홀딩스(036530) 목표주가 증권사 리포트 2026; 증권사의 명시적 목표 PBR 배수·목표주가 리포트가 검색되지 않아(SNT에너지·SNT모티브 등 자회사 리포트는 존재하나 지주사인 SNT홀딩스 자체 커버리지 없음), pbr_max 칸에는 부득이 2026.5.1 기준 현재 거래 PBR(0.72배, 주가 62,100원, 52주 32,500~89,000원)을 참고치로 입력함 — 이는 애널리스트 목표배수가 아니라 현재가 기준 실측치이므로 목표가로 오인하지 말 것. 지주사할인 축소는 '소각 검토'가 '소각 확정·실행'으로 전환되어야 실현되는 조건부 시나리오.",
-      "sources": [
-        "[SNT홀딩스, PBR 0.72배 - 인베스팅닷컴](https://www.investing.com/equities/s-t-holdings)",
-        "[SNT홀딩스 재무제표 - 한국경제](https://markets.hankyung.com/stock/036530/financial-summary)"
-      ],
-      "fundamental_reason": "현재 PBR 0.72~0.74배로 5년 평균 PBR 0.34배 대비는 이미 레벨업된 상태이나 ROE 10.27%에 비해 여전히 저평가. 자사주 소각 실행이 공식화될 경우 지주사할인(conglomerate discount) 축소를 통한 리레이팅 여력이 있다는 시장 평가 존재."
-    },
-    {
       "ticker": "006040",
       "name": "동원산업",
       "pbr_max": null,
@@ -950,18 +938,6 @@
       "fundamental_reason": "카카오 투입원가 부담이 1Q26부터 유의미하게 경감(카카오 가격 톤당 1만불→6천불), 중국 정부 부양책 기반 회복. 2026년 국가별 톱라인 성장률을 한국 4.0% / 중국 5.0% / 베트남 5.3% / 러시아 20.0%로 추정하며 연결손익 YoY +10.7% 전망."
     },
     {
-      "ticker": "005440",
-      "name": "현대지에프홀딩스",
-      "pbr_max": 0.7,
-      "target_price": 20000.0,
-      "rationale": "pbr_max 0.7배는 2028년까지의 장기 목표로, 단기(2026년 내) 달성을 전제한 수치가 아님에 유의. target_price는 SK증권 20,000원(18,000원에서 상향)을 채택했으며 IBK투자증권은 19,000원을 제시해 큰 편차는 없음. 현대홈쇼핑 완전자회사 편입에 따른 지배구조 단순화가 재평가의 실질적 트리거이나 편입 완료(7.20 상장폐지) 이후 시장 반응은 아직 확인되지 않은 상태.",
-      "sources": [
-        "['시장심리'에 승부수… 현대지에프홀딩스, PBR 0.7배 돌파할까 - 블로터](https://www.bloter.net/news/articleView.html?idxno=661888)",
-        "[현대지에프홀딩스, 백화점에 웃는다 목표가 20,000원 - SK증권/뉴스핌](https://www.newspim.com/news/view/20260626000129)"
-      ],
-      "fundamental_reason": "지분투자수익률 4%↑ 목표를 조기 달성하며 PBR 0.7배(2028년 목표, 장기 목표는 1배)를 제시. 2026.5.31 기준 현재 PBR 0.49배 대비 0.7배 도달 시 시가총액 약 2.8조원이 필요해(당시 시총 2.14조원 대비 +22% 상승 여력) 목표가 20,000원과 정합성이 있음."
-    },
-    {
       "ticker": "021240",
       "name": "코웨이",
       "pbr_max": null,
@@ -971,6 +947,21 @@
         "[한화證, 코웨이 렌탈계정 순증 사상 최대 전망…목표가 15만원 유지 - 아주경제](https://www.ajunews.com/view/20260715075851333)"
       ],
       "fundamental_reason": "렌탈계정 순증 사상 최대 전망(2분기 23만개 추정), 말레이시아·태국 등 동남아 성장 지속, 2026년 영업이익 1조원 근접(컨센서스 9,987억원) 및 연매출 5조원 목표 순항."
+    },
+    {
+      "ticker": "316140",
+      "name": "우리금융지주",
+      "pbr_max": 0.75,
+      "target_price": 41600.0,
+      "rationale": "8개 증권사 목표주가 컨센서스 평균 41,595원은 2026년 예상 BPS(55,728원) 대비 약 0.75배 PBR에 해당하며, 이는 최근 12개월 PBR 밴드 상단(0.58배)보다 자본비율 개선·환원율 확대를 반영해 높게 형성된 수준. 다만 KB증권은 비은행 부문 실적 둔화를 이유로 목표가를 46,000원→43,000원(-6.5%)으로 최근 하향했고, 최저 컨센서스(33,000원)와의 괴리도 커 리레이팅이 예상보다 지연될 리스크 존재.",
+      "sources": [
+        "https://littlebproject.com/stock/316140",
+        "https://www.investing.com/equities/woori-financial",
+        "https://www.newspim.com/news/view/20260512000165",
+        "https://v.daum.net/v/BxaMFNGhoi?f=p",
+        "http://money2.daishin.co.kr/PDF/Out/intranet_data/Product/ResearchCenter/Report/2026/02/56551_WFG_earnings_review_4Q25.pdf"
+      ],
+      "fundamental_reason": "CET1 비율이 2026년 1분기 말 13.5%로 목표(13%)를 조기 초과 달성하면서 상·하반기 연 2회 자사주 매입 요건을 충족했고, 2026년 총주주환원율이 전년 36.6%에서 45% 내외로 상향될 전망이라 PBR 리레이팅 여력이 있음."
     }
   ],
   "source_reviewed": {
@@ -1014,12 +1005,11 @@
       "thesis"
     ],
     "targets": [
-      "005440",
       "005830",
       "006040",
       "021240",
-      "036530",
-      "271560"
+      "271560",
+      "316140"
     ]
   },
   "approved": {
@@ -1129,21 +1119,29 @@
     },
     "targets": {
       "approved_by": "operator",
-      "as_of": "2026-07-17",
+      "as_of": "2026-07-19",
       "applied": {
         "applied": true,
         "tickers": [
-          "036530",
           "006040",
           "005830",
           "271560",
-          "005440",
-          "021240"
+          "021240",
+          "316140"
         ],
+        "skipped_not_in_proposal": [],
         "yaml_path": "C:\\Cursor\\investment-saa-alpha\\data\\kr_alpha_exit_targets.yaml",
         "target_portfolio_hash": "5b00256e2de151dad7d4ff3ebb638d06d56ffa66862fa639b9fc835feeb9311f",
         "target_portfolio_written": false
       }
     }
-  }
+  },
+  "mode": "targets_supplement",
+  "deep_tickers": [
+    "005830",
+    "006040",
+    "021240",
+    "271560",
+    "316140"
+  ]
 }

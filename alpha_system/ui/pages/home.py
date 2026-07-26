@@ -10,6 +10,11 @@ import streamlit as st
 from alpha_system.entry.models import TrancheState
 from alpha_system.ui.services.action_panels import open_panel, render_active_panel
 from alpha_system.ui.services.context import DashboardContext
+from alpha_system.ui.services.freshness_alerts import (
+    FreshnessAlert,
+    build_freshness_alerts,
+    cadence_guide,
+)
 from alpha_system.ui.services.home_pipeline import (
     HomeOverview,
     PipelineStage,
@@ -76,6 +81,89 @@ def _open_stage(stage: PipelineStage) -> None:
     navigate(stage.page, focus=stage.focus, prefill=stage.prefill)
 
 
+def _open_alert(alert: FreshnessAlert) -> None:
+    navigate(alert.page, focus=alert.focus)
+
+
+def _run_quant_snapshot_from_home(ctx: DashboardContext) -> None:
+    from alpha_system.ui.services.auto_journal import journal_data_refresh
+    from alpha_system.ui.services.refresh import run_quant_snapshot_refresh
+
+    with st.spinner("PyKRX·DART 수집과 alpha_scores 재계산 중…"):
+        result = run_quant_snapshot_refresh(ctx.root, collect_scope="liquid")
+    journal_data_refresh(
+        as_of=date.today(),
+        ok=result.ok,
+        message=result.message,
+        detail=result.detail,
+    )
+    if result.ok:
+        ctx.runtime.touch_refresh("alpha_quant_snapshot")
+        ctx.runtime.save(ctx.root / "data" / "alpha_dashboard_runtime.json")
+        st.success(result.message)
+        st.rerun()
+    st.error(result.message)
+    with st.expander("실패 상세"):
+        st.json(result.detail)
+
+
+def _render_freshness_alerts(ctx: DashboardContext) -> None:
+    alerts = build_freshness_alerts(ctx)
+    if not alerts:
+        return
+    st.subheader("판단 데이터 경고")
+    st.caption(
+        "세부 판단(점수·갭·목표가·월간 T3)에 쓰이는 데이터가 오래되었거나 비어 있습니다. "
+        "정량 관련 경고는 여기서 바로 갱신할 수 있습니다."
+    )
+    for alert in alerts:
+        banner = (
+            "alpha-banner-danger" if alert.severity == "danger" else "alpha-banner-warn"
+        )
+        st.markdown(
+            f'<div class="{banner}"><strong>{alert.title}</strong><br/>'
+            f"{alert.detail}</div>",
+            unsafe_allow_html=True,
+        )
+        if alert.inline_quant_refresh:
+            if st.button(
+                "정량 전체 갱신",
+                type="primary",
+                key=f"fresh_alert_refresh_{alert.key}",
+                use_container_width=True,
+            ):
+                _run_quant_snapshot_from_home(ctx)
+        elif st.button(
+            alert.cta_label,
+            key=f"fresh_alert_{alert.key}",
+            use_container_width=True,
+        ):
+            _open_alert(alert)
+
+
+def _render_cadence_guide() -> None:
+    with st.expander("시스템을 켤 때 · 주기 갱신 안내", expanded=False):
+        st.caption(
+            "아래는 권장 주기입니다. 위에서 경고가 뜨면 그 항목을 먼저 처리하세요."
+        )
+        for item in cadence_guide():
+            cols = st.columns([3, 5, 2])
+            with cols[0]:
+                st.markdown(f"**{item.cadence}**")
+            with cols[1]:
+                st.markdown(
+                    f"**{item.title}**<br/><small>{item.detail}</small>",
+                    unsafe_allow_html=True,
+                )
+            with cols[2]:
+                if st.button(
+                    "이동",
+                    key=f"cadence_{item.title}",
+                    use_container_width=True,
+                ):
+                    navigate(item.page, focus=item.focus)
+
+
 def _next_judgment_hint(ctx: DashboardContext) -> str:
     as_of = ctx.as_of
     if as_of >= ctx.window_end:
@@ -136,25 +224,7 @@ def _render_next_action(ctx: DashboardContext, overview: HomeOverview) -> None:
     if not clicked:
         return
     if action.key == "quant":
-        from alpha_system.ui.services.auto_journal import journal_data_refresh
-        from alpha_system.ui.services.refresh import run_quant_snapshot_refresh
-
-        with st.spinner("PyKRX·DART 수집과 alpha_scores 재계산 중…"):
-            result = run_quant_snapshot_refresh(ctx.root, collect_scope="liquid")
-        journal_data_refresh(
-            as_of=date.today(),
-            ok=result.ok,
-            message=result.message,
-            detail=result.detail,
-        )
-        if result.ok:
-            ctx.runtime.touch_refresh("alpha_quant_snapshot")
-            ctx.runtime.save(ctx.root / "data" / "alpha_dashboard_runtime.json")
-            st.success(result.message)
-            st.rerun()
-        st.error(result.message)
-        with st.expander("실패 상세"):
-            st.json(result.detail)
+        _run_quant_snapshot_from_home(ctx)
     else:
         _open_stage(action)
 
@@ -258,6 +328,8 @@ def render_home(ctx: DashboardContext) -> None:
             )
         )
 
+    _render_freshness_alerts(ctx)
+    _render_cadence_guide()
     _render_preparation(overview)
     _render_next_action(ctx, overview)
     _render_proposal_result(ctx, overview)

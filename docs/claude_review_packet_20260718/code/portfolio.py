@@ -24,7 +24,6 @@ _TARGET_NAMES_DEFAULT = 6
 
 
 def render_portfolio(ctx: DashboardContext) -> None:
-    st.subheader("포트폴리오")
     st.caption(
         "제안 북(스크린)과 운용 북(실보유)을 분리합니다. "
         "행을 펼치면 상세 · 한 번에 하나만 확장 · target 자동 변경 없음"

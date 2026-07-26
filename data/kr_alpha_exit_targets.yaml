@@ -31,7 +31,7 @@ tickers:
     sources:
     - '[한화證, 코웨이 렌탈계정 순증 사상 최대 전망…목표가 15만원 유지 - 아주경제](https://www.ajunews.com/view/20260715075851333)'
     approved_by: operator
-    approved_as_of: '2026-07-17'
+    approved_as_of: '2026-07-19'
     source: weekly_qual_ai_approved
   005830:
     thesis_id: db_insurance_shareholder_return
@@ -49,7 +49,7 @@ tickers:
     - '[DB손해보험, 목표가 25만원 - 대신증권/kiwoom](https://bbn.kiwoom.com/rfCR11951)'
     - '[DB손해보험 주가전망 목표주가 - KB증권/kbthink](https://kbthink.com/securities-view.html?docId=20260219100209963K)'
     approved_by: operator
-    approved_as_of: '2026-07-17'
+    approved_as_of: '2026-07-19'
     source: weekly_qual_ai_approved
   '006040':
     thesis_id: dongwon_dividend_value
@@ -68,7 +68,7 @@ tickers:
     sources:
     - '[동원산업, HMM 부담 못 털어…목표가는 하향 - 흥국/이데일리](https://marketin.edaily.co.kr/News/ReadE?newsId=03250486645448264)'
     approved_by: operator
-    approved_as_of: '2026-07-17'
+    approved_as_of: '2026-07-19'
     source: weekly_qual_ai_approved
   '271560':
     thesis_id: orion_quality_defensive
@@ -88,7 +88,7 @@ tickers:
     sources:
     - '[오리온, 2026년 오리온의 시간 목표가 200,000원 - 하나증권/네이트](https://news.nate.com/view/20260422n05383)'
     approved_by: operator
-    approved_as_of: '2026-07-17'
+    approved_as_of: '2026-07-19'
     source: weekly_qual_ai_approved
   '036530':
     thesis_id: snt_holdings_shareholder_return
@@ -129,4 +129,23 @@ tickers:
     - '[현대지에프홀딩스, 백화점에 웃는다 목표가 20,000원 - SK증권/뉴스핌](https://www.newspim.com/news/view/20260626000129)'
     approved_by: operator
     approved_as_of: '2026-07-17'
+    source: weekly_qual_ai_approved
+  '316140':
+    target_price: 41600.0
+    valuation:
+      pbr_max: 0.75
+    rationale: 8개 증권사 목표주가 컨센서스 평균 41,595원은 2026년 예상 BPS(55,728원) 대비 약 0.75배 PBR에
+      해당하며, 이는 최근 12개월 PBR 밴드 상단(0.58배)보다 자본비율 개선·환원율 확대를 반영해 높게 형성된 수준. 다만 KB증권은
+      비은행 부문 실적 둔화를 이유로 목표가를 46,000원→43,000원(-6.5%)으로 최근 하향했고, 최저 컨센서스(33,000원)와의
+      괴리도 커 리레이팅이 예상보다 지연될 리스크 존재.
+    fundamental_reason: CET1 비율이 2026년 1분기 말 13.5%로 목표(13%)를 조기 초과 달성하면서 상·하반기 연 2회
+      자사주 매입 요건을 충족했고, 2026년 총주주환원율이 전년 36.6%에서 45% 내외로 상향될 전망이라 PBR 리레이팅 여력이 있음.
+    sources:
+    - https://littlebproject.com/stock/316140
+    - https://www.investing.com/equities/woori-financial
+    - https://www.newspim.com/news/view/20260512000165
+    - https://v.daum.net/v/BxaMFNGhoi?f=p
+    - http://money2.daishin.co.kr/PDF/Out/intranet_data/Product/ResearchCenter/Report/2026/02/56551_WFG_earnings_review_4Q25.pdf
+    approved_by: operator
+    approved_as_of: '2026-07-19'
     source: weekly_qual_ai_approved

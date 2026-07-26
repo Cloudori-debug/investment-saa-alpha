@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 import subprocess
 import sys
+import time
 from typing import Any
 
 
@@ -14,6 +15,21 @@ class RefreshResult:
     ok: bool
     message: str
     detail: dict[str, Any]
+
+
+def _is_krx_timeout(exc: BaseException) -> bool:
+    text = str(exc).lower()
+    return "timed out" in text or "timeout" in text or "data.krx.co.kr" in text
+
+
+def _format_refresh_error(exc: BaseException) -> str:
+    if _is_krx_timeout(exc):
+        return (
+            "KRX(data.krx.co.kr) 응답 지연·타임아웃입니다. "
+            "일시적 장애인 경우가 많으니 1~2분 뒤 다시 시도하세요. "
+            "설정 → KRX 테스트로 연결을 확인할 수 있습니다."
+        )
+    return str(exc)
 
 
 def run_data_refresh(data_dir: Path, *, scope: str = "holdings") -> RefreshResult:
@@ -32,25 +48,40 @@ def run_data_refresh(data_dir: Path, *, scope: str = "holdings") -> RefreshResul
         )
 
     apply_secrets_to_env(data_dir)
-    try:
-        result = run_pykrx_bulk_collect(
-            data_dir,
-            scope=scope,
-            merge_existing_universe=True,
-            write_history=True,
-            enrich_dart=True,
-        )
-        return RefreshResult(
-            ok=True,
-            message="현재가·펀더멘털 갱신 완료",
-            detail={
-                "as_of": getattr(result, "as_of", None),
-                "tickers": getattr(result, "tickers_processed", None),
-                "errors": getattr(result, "errors", None),
-            },
-        )
-    except Exception as exc:
-        return RefreshResult(ok=False, message=str(exc), detail={"error": str(exc)})
+    last_exc: BaseException | None = None
+    attempts = 3
+    for attempt in range(1, attempts + 1):
+        try:
+            result = run_pykrx_bulk_collect(
+                data_dir,
+                scope=scope,
+                merge_existing_universe=True,
+                write_history=True,
+                enrich_dart=True,
+            )
+            return RefreshResult(
+                ok=True,
+                message="현재가·펀더멘털 갱신 완료",
+                detail={
+                    "as_of": getattr(result, "as_of", None),
+                    "tickers": getattr(result, "tickers_processed", None),
+                    "errors": getattr(result, "errors", None),
+                    "attempts": attempt,
+                },
+            )
+        except Exception as exc:
+            last_exc = exc
+            if attempt < attempts and _is_krx_timeout(exc):
+                time.sleep(3 * attempt)
+                continue
+            break
+
+    assert last_exc is not None
+    return RefreshResult(
+        ok=False,
+        message=_format_refresh_error(last_exc),
+        detail={"error": str(last_exc), "attempts": attempts},
+    )
 
 
 def run_quant_snapshot_refresh(

@@ -57,6 +57,7 @@
 
 - `deep_tickers` = 현재 proposal_book 전체 (편입 게이트 allowlist)
 - proposal 밖·대기 목록 밖 종목은 업로드 거부
+- **요청서에 업로드 합격 조건 고정** — `_reference`/조사메모/`_____` 미기입·값 줄 주석 금지. 숫자·문장·출처만 허용
 
 ## 저장물
 

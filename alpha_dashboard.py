@@ -64,7 +64,7 @@ PAGES = {
     PAGE_JOURNAL: journal.render_journal,
 }
 
-st.markdown("### 알파 시스템")
+st.markdown('<div class="alpha-app-title">알파 시스템</div>', unsafe_allow_html=True)
 
 page = st.radio(
     "화면",

@@ -228,24 +228,12 @@ def build_weekly_qual_markdown(
             "## E_TARGET_VALUATION",
             "",
             "제안 6종 목표가/PBR. target_portfolio 자동 변경 금지.",
-            "`pbr_max`는 배수 숫자만(예: `0.75`), `target_price`는 원 단위 숫자만(예: `48000`).",
-            "둘 중 최소 1개는 숫자. `배`/`원`/쉼표/범위(~)/증권사 주석은 근거 칸에만.",
+            *_E_TARGET_FILL_RULES,
             "",
         ]
     )
     for subject in deep_subjects:
-        lines.extend(
-            [
-                f"### TARGET [{subject.ticker}] {subject.name}",
-                "- pbr_max: _____",
-                "- target_price: _____",
-                "- 펀더멘털 사유: _____",
-                "- 근거: _____",
-                "- 출처:",
-                "  - ",
-                "",
-            ]
-        )
+        lines.extend(_target_blank_block(subject))
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -700,6 +688,14 @@ def _parse_thesis(text: str) -> tuple[ParsedThesis | None, list[str]]:
     )
 
 
+def _is_placeholder_fill(raw: str) -> bool:
+    """True for empty or still-unfilled _____ placeholders (incl. trailing notes)."""
+    text = (raw or "").strip()
+    if not text or text == "_____":
+        return True
+    return text.startswith("_____")
+
+
 def _parse_targets(text: str) -> tuple[list[ParsedTargetValuation], list[str]]:
     chunks = re.split(r"(?m)^###\s+TARGET\s+\[", text)
     out: list[ParsedTargetValuation] = []
@@ -713,18 +709,23 @@ def _parse_targets(text: str) -> tuple[list[ParsedTargetValuation], list[str]]:
         ticker, name = hm.group(1), hm.group(2).strip()
         fund_reason = _field(body, "펀더멘털 사유")
         rationale = _field(body, "근거")
-        if not fund_reason or fund_reason == "_____":
-            failures.append(f"{ticker}: 펀더멘털 사유 필요")
+        if _is_placeholder_fill(fund_reason):
+            failures.append(
+                f"{ticker}: 펀더멘털 사유 필요 (_____/참고자료만 두면 거부)"
+            )
             continue
-        if not rationale or rationale == "_____":
-            failures.append(f"{ticker}: 근거 필요")
+        if _is_placeholder_fill(rationale):
+            failures.append(f"{ticker}: 근거 필요 (_____/참고자료만 두면 거부)")
             continue
         pbr_raw = _field(body, "pbr_max")
         price_raw = _field(body, "target_price")
         pbr = _float_blank(pbr_raw)
         price = _float_blank(price_raw)
         if pbr is None and price is None:
-            failures.append(f"{ticker}: pbr_max 또는 target_price 필요")
+            failures.append(
+                f"{ticker}: pbr_max 또는 target_price에 숫자만 기입 "
+                f"(같은 줄 주석·_____ 금지). 받은 값 pbr={pbr_raw!r} price={price_raw!r}"
+            )
             continue
         sources = _parse_sources(body)
         if sources == ("확인 불가",):
@@ -746,7 +747,10 @@ def _parse_targets(text: str) -> tuple[list[ParsedTargetValuation], list[str]]:
 
 def _float_blank(raw: str) -> float | None:
     text = (raw or "").strip()
-    if not text or text in {"_____", "확인 불가", "-"}:
+    if not text or text in {"_____", "확인 불가", "-"} or text.startswith("_____"):
+        return None
+    # Reject trailing notes on the same line (e.g. "0.6 (참고: …)").
+    if re.search(r"[^\d.\-\s,]", text):
         return None
     try:
         return float(text.replace(",", ""))
@@ -840,6 +844,44 @@ def waiting_target_subjects(
     return waiting
 
 
+# Hard contract for E / targets-supplement fills (shown in generated request MD).
+_E_TARGET_FILL_RULES: tuple[str, ...] = (
+    "**업로드 합격 조건 (필수 · 외부 AI도 준수)**",
+    "1. **이 요청서 파일 자체를 채운 완성본만** 업로드한다. "
+    "`_reference` / 조사메모 / 참고자료 / research memo 별도 파일은 업로드해도 거부된다.",
+    "2. `_____` 를 남기면 거부. 빈칸·플레이스홀더 업로드 금지.",
+    "3. `pbr_max:` 또는 `target_price:` 중 **최소 1개**는 숫자만 "
+    "(예: `0.60` / `42000`). 같은 줄에 `(참고:…)`·범위(~)·원/배·증권사명 금지.",
+    "4. `펀더멘털 사유:`·`근거:` 는 문장으로 채운다. 조사 참고는 **근거 본문**에만.",
+    "5. `출처:` 아래 URL(또는 1차 출처) **1개 이상**.",
+    "6. 헤더 `## E_TARGET_VALUATION` / `### TARGET [티커] 이름` / 필드 라벨을 바꾸지 말 것.",
+    "",
+    "완성 예 (숫자·문장만 — 주석을 값 줄에 붙이지 말 것):",
+    "```",
+    "### TARGET [316140] 우리금융지주",
+    "- pbr_max: 0.60",
+    "- target_price: 42000",
+    "- 펀더멘털 사유: CET1 조기 달성·자사주 환원 명문화",
+    "- 근거: 피어 PBR 밴드·컨센서스 대비 상한",
+    "- 출처:",
+    "  - https://example.com/source",
+    "```",
+)
+
+
+def _target_blank_block(subject: WeeklySubject) -> list[str]:
+    return [
+        f"### TARGET [{subject.ticker}] {subject.name}",
+        "- pbr_max: _____",
+        "- target_price: _____",
+        "- 펀더멘털 사유: _____",
+        "- 근거: _____",
+        "- 출처:",
+        "  - ",
+        "",
+    ]
+
+
 def build_targets_supplement_markdown(
     *,
     waiting_subjects: Sequence[WeeklySubject],
@@ -865,7 +907,8 @@ def build_targets_supplement_markdown(
         "",
         "이 파일은 **목표가(E)만** 채웁니다. CECS/T2/논지는 건드리지 마세요.",
         "대상은 현재 제안 북 중 목표가 미승인(대기) 종목뿐입니다.",
-        "`pbr_max`는 배수 숫자만, `target_price`는 원 단위 숫자만.",
+        "",
+        *_E_TARGET_FILL_RULES,
         "",
         "---",
         "",
@@ -873,18 +916,7 @@ def build_targets_supplement_markdown(
         "",
     ]
     for subject in subjects:
-        lines.extend(
-            [
-                f"### TARGET [{subject.ticker}] {subject.name}",
-                "- pbr_max: _____",
-                "- target_price: _____",
-                "- 펀더멘털 사유: _____",
-                "- 근거: _____",
-                "- 출처:",
-                "  - ",
-                "",
-            ]
-        )
+        lines.extend(_target_blank_block(subject))
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -952,7 +984,12 @@ def persist_targets_supplement(
 ) -> Path:
     """Merge E-only upload into suggestions without wiping other domains."""
     if not parsed.targets:
-        raise ValueError("목표가 제안이 없습니다. E_TARGET_VALUATION을 채우세요.")
+        fails = list((parsed.domain_failures or {}).get("targets") or [])
+        detail = "; ".join(fails[:5]) if fails else "E_TARGET_VALUATION을 숫자·문장으로 채우세요."
+        raise ValueError(
+            "목표가 제안이 없습니다. 참고자료(_reference)·_____ 미기입은 거부됩니다. "
+            + detail
+        )
     prop = sorted({str(t).zfill(6) for t in proposal_tickers if str(t).strip()})
     waiting = {str(t).zfill(6) for t in waiting_tickers if str(t).strip()}
     if not prop:
@@ -982,11 +1019,14 @@ def persist_targets_supplement(
     payload["imported_at"] = datetime.now().isoformat(timespec="seconds")
     payload["mode"] = "targets_supplement"
     payload["deep_tickers"] = prop
-    # Merge targets: keep prior non-waiting rows, replace waiting tickers.
+    # Merge targets: keep prior rows still in proposal and not in waiting;
+    # drop stale names that left the proposal book (e.g. last week's final).
+    prop_set = set(prop)
     prior_targets = [
         t
         for t in (payload.get("targets") or [])
-        if str(t.get("ticker") or "").zfill(6) not in waiting
+        if str(t.get("ticker") or "").zfill(6) in prop_set
+        and str(t.get("ticker") or "").zfill(6) not in waiting
     ]
     new_targets = [asdict(t) for t in parsed.targets]
     payload["targets"] = prior_targets + new_targets

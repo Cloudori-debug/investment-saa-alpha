@@ -178,6 +178,64 @@ def test_apply_targets_rejects_ticker_not_in_final_snapshot(tmp_path: Path) -> N
     clear_entries()
 
 
+def test_apply_targets_skips_stale_outside_proposal(tmp_path: Path) -> None:
+    """Stale prior-final names are skipped; current proposal targets still apply."""
+    clear_entries()
+    root = tmp_path
+    (root / "data").mkdir()
+    target_csv = root / "data" / "target_portfolio.csv"
+    target_csv.write_text("ticker,asset_group,target_weight\n005830,kr_alpha,10\n", encoding="utf-8")
+    suggestions = {
+        "report_id": "WQR-mix",
+        "deep_tickers": ["005830"],
+        "targets": [
+            {
+                "ticker": "036530",
+                "pbr_max": 0.7,
+                "fundamental_reason": "stale prior final",
+                "rationale": "left proposal book",
+                "sources": ["https://example.com/snt"],
+            },
+            {
+                "ticker": "005830",
+                "pbr_max": 1.2,
+                "fundamental_reason": "current",
+                "rationale": "in book",
+                "sources": ["https://example.com/db"],
+            },
+        ],
+        "source_reviewed": {"targets": ["036530", "005830"]},
+        "approved": {k: False for k in ("cecs", "t2", "thesis", "targets")},
+        "domain_status": {"targets": "ai_suggested"},
+    }
+    import json
+
+    (root / "data" / "weekly_qual_suggestions.json").write_text(
+        json.dumps(suggestions, ensure_ascii=False), encoding="utf-8"
+    )
+    result = approve_domain(
+        root=root,
+        domain="targets",
+        approved_by="operator",
+        as_of=date(2026, 7, 19),
+        reviewed_keys=["036530", "005830"],
+        journal_path=tmp_path / "j.jsonl",
+        exit_targets_path=root / "data" / "kr_alpha_exit_targets.yaml",
+        confirm_steps=0,
+    )
+    applied = result["applied"]
+    assert applied["tickers"] == ["005830"]
+    assert applied["skipped_not_in_proposal"] == ["036530"]
+    saved = json.loads(
+        (root / "data" / "weekly_qual_suggestions.json").read_text(encoding="utf-8")
+    )
+    assert [t["ticker"] for t in saved["targets"]] == ["005830"]
+    yaml_text = (root / "data" / "kr_alpha_exit_targets.yaml").read_text(encoding="utf-8")
+    assert "005830" in yaml_text
+    assert "036530" not in yaml_text
+    clear_entries()
+
+
 def test_domain_approve_is_isolated_and_target_portfolio_unchanged(tmp_path: Path) -> None:
     clear_entries()
     root = tmp_path
@@ -545,6 +603,9 @@ def test_targets_supplement_e_only_and_merge(tmp_path: Path) -> None:
     assert "A_CECS_SUMMARY" not in report.markdown
     assert "021240" in report.markdown
     assert "005830" not in report.markdown.split("## E_TARGET_VALUATION", 1)[1]
+    assert "업로드 합격 조건" in report.markdown
+    assert "_reference" in report.markdown
+    assert "같은 줄에" in report.markdown or "같은 줄" in report.markdown
     assert list_entries(action_kind="WEEKLY_TARGETS_SUPPLEMENT_GENERATED")
 
     filled = """# supplement
@@ -605,3 +666,45 @@ def test_targets_supplement_rejects_outside_waiting(tmp_path: Path) -> None:
             proposal_tickers=["021240"],
             waiting_tickers=["021240"],
         )
+
+
+def test_targets_reference_only_upload_rejected(tmp_path: Path) -> None:
+    """Blank / reference-style fills must fail with actionable message."""
+    root = tmp_path
+    (root / "data").mkdir()
+    reference_style = """## E_TARGET_VALUATION
+
+### TARGET [316140] 우리금융지주
+- pbr_max: _____   (참고: 최근 PBR 밴드 0.34~0.58배)
+- target_price: _____   (참고: 컨센서스 41,595원)
+- 펀더멘털 사유: _____
+- 근거: _____
+- 출처:
+  - https://example.com/woori
+"""
+    parsed = parse_weekly_qual_markdown(reference_style)
+    assert not parsed.targets
+    assert any("펀더멘털 사유" in f for f in parsed.domain_failures["targets"])
+    with pytest.raises(ValueError, match="참고자료|_reference|_____|펀더멘털 사유"):
+        persist_targets_supplement(
+            root=root,
+            parsed=parsed,
+            report_name="weekly_qual_targets_supplement_20260718_reference.md",
+            as_of=date(2026, 7, 18),
+            proposal_tickers=["316140"],
+            waiting_tickers=["316140"],
+        )
+
+
+def test_weekly_e_section_includes_upload_contract(tmp_path: Path) -> None:
+    report = write_weekly_qual_report(
+        summary_subjects=[WeeklySubject("005830", "DB손해보험", "insurance")],
+        deep_subjects=[WeeklySubject("005830", "DB손해보험", "insurance")],
+        t2_event_ids=["commercial_code_enforcement_decrees"],
+        docs_dir=tmp_path / "docs",
+        as_of=date(2026, 7, 19),
+        generated_at=datetime(2026, 7, 19, 1, 0, 0),
+        journal_path=tmp_path / "journal.jsonl",
+    )
+    assert "업로드 합격 조건" in report.markdown
+    assert "_reference" in report.markdown
